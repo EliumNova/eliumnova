@@ -2,7 +2,7 @@
 // Cambiá acá el dominio, teléfono, horarios o reseñas y se actualiza todo el sitio (incluido el SEO).
 
 export const site = {
-  url: "https://eliumnova.netlify.app", // cambiar cuando tengas dominio propio (ej: https://eliumnova.com.ar)
+  url: "https://eliumnova.com.ar", // cambiar cuando tengas dominio propio (ej: https://eliumnova.com.ar)
   name: "EliumNova",
   slogan: "Más que una reparación, una solución.",
   title: "Servicio técnico | EliumNova",
