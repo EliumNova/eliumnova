@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { categories, money, type Category, type Product } from "@/lib/shop";
 import ShopProvider, { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
 import MonedaToggle from "./MonedaToggle";
+import CategoryIcon from "./CategoryIcon";
 import ProductDetail from "./ProductDetail";
 import CartDrawer from "./CartDrawer";
 import StoreInfo from "./StoreInfo";
@@ -25,7 +27,8 @@ const today = () =>
 
 function Catalog() {
   const { products, price, listPrice, onSale, campaign, dolar, add, count, setCartOpen, loading, fmt, alt, moneda } = useShop();
-  const [cat, setCat] = useState<Category | "todo">("todo");
+  // null = todavía no eligió qué busca: se muestra la pantalla de categorías.
+  const [cat, setCatState] = useState<Category | "todo" | null>(null);
   const [brand, setBrand] = useState("todas");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<Sort>("destacados");
@@ -33,6 +36,29 @@ function Catalog() {
   const [fecha, setFecha] = useState("");
 
   useEffect(() => setFecha(today()), []);
+
+  // La categoría vive en la URL (?c=celulares) para que el botón "atrás" y los links compartidos funcionen.
+  useEffect(() => {
+    const read = () => {
+      const sp = new URLSearchParams(window.location.search);
+      const c = sp.get("c");
+      const valid = c === "todo" || categories.some((x) => x.id === c);
+      setCatState(valid ? (c as Category | "todo") : sp.get("p") ? "todo" : null);
+    };
+    read();
+    window.addEventListener("popstate", read);
+    return () => window.removeEventListener("popstate", read);
+  }, []);
+
+  function setCat(c: Category | "todo" | null) {
+    setCatState(c);
+    const url = new URL(window.location.href);
+    if (c) url.searchParams.set("c", c);
+    else url.searchParams.delete("c");
+    url.searchParams.delete("p");
+    window.history.pushState(null, "", url);
+    document.getElementById("catalogo")?.scrollIntoView({ block: "start" });
+  }
 
   // Abrir un producto desde un link compartido (?p=id).
   useEffect(() => {
@@ -53,7 +79,7 @@ function Catalog() {
   }
 
   const brands = useMemo(() => {
-    const inCat = products.filter((p) => cat === "todo" || p.categoria === cat);
+    const inCat = products.filter((p) => !cat || cat === "todo" || p.categoria === cat);
     return Array.from(new Set(inCat.map((p) => p.marca))).sort();
   }, [products, cat]);
 
@@ -63,7 +89,7 @@ function Catalog() {
 
   // Métricas: qué categorías miran y qué buscan.
   useEffect(() => {
-    if (cat !== "todo") track("view_item_list", { item_list_id: cat, item_list_name: cat });
+    if (cat && cat !== "todo") track("view_item_list", { item_list_id: cat, item_list_name: cat });
   }, [cat]);
   useEffect(() => {
     const term = q.trim();
@@ -83,7 +109,7 @@ function Catalog() {
     const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
     const out = products.filter(
       (p) =>
-        (cat === "todo" || p.categoria === cat) &&
+        (!cat || cat === "todo" || p.categoria === cat) &&
         (brand === "todas" || p.marca === brand) &&
         (!term || norm(`${p.nombre} ${p.marca} ${p.detalle ?? ""} ${p.compat ?? ""}`).includes(term)),
     );
@@ -101,7 +127,8 @@ function Catalog() {
           <p className="kicker">Tienda EliumNova</p>
           <h1>Tecnología que pasa por el taller antes de llegar a tus manos.</h1>
           <p className="lead">
-            Celulares, Apple y accesorios. Cada equipo se revisa antes de entregarlo, con garantía y atención directa por WhatsApp.
+            Celulares, notebooks, audio, accesorios y PCs armadas a medida. Cada equipo se revisa antes de entregarlo, con garantía y atención
+            directa por WhatsApp.
           </p>
           <ul className="trust">
             <li>Revisado por un técnico</li>
@@ -111,10 +138,66 @@ function Catalog() {
         </div>
       </section>
 
-      <section className="shop-body" aria-label="Catálogo">
+      {cat === null ? (
+        <section className="shop-body picker" id="catalogo" aria-labelledby="picker-title">
+          <div className="wrap">
+            <h2 id="picker-title">¿Qué estás buscando?</h2>
+            <label className="search picker-search">
+              <span className="sr">Buscar</span>
+              <input
+                type="search"
+                value={q}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  if (e.target.value.trim().length >= 2) setCat("todo");
+                }}
+                placeholder="O buscá directo: A16, iPhone 13, cargador…"
+              />
+            </label>
+            <ul className="tiles">
+              {categories.map((c) => {
+                const items = products.filter((p) => p.categoria === c.id);
+                const precios = items.map((p) => price(p)).filter((n): n is number => n !== null);
+                return (
+                  <li key={c.id}>
+                    <button className="tile" onClick={() => setCat(c.id)}>
+                      <CategoryIcon id={c.id} />
+                      <b>{c.label}</b>
+                      <span>{c.bajada}</span>
+                      <small>
+                        {loading ? "Cargando…" : `${items.length} ${items.length === 1 ? "opción" : "opciones"}`}
+                        {precios.length ? ` · desde ${fmt(Math.min(...precios))}` : ""}
+                      </small>
+                    </button>
+                  </li>
+                );
+              })}
+              <li className="tile-wide">
+                <Link className="tile tile-pc" href="/tienda/arma-tu-pc" onClick={() => track("select_content", { content_type: "arma_tu_pc" })}>
+                  <CategoryIcon id="pc" />
+                  <b>Armá tu PC</b>
+                  <span>Gamer, para trabajar o para estudiar. Elegís el uso y el presupuesto, nosotros la armamos y la probamos.</span>
+                  <small className="tile-cta">Empezar →</small>
+                </Link>
+              </li>
+              <li>
+                <button className="tile tile-ghost" onClick={() => setCat("todo")}>
+                  <CategoryIcon id="todo" />
+                  <b>Ver todo</b>
+                  <span>El catálogo completo</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </section>
+      ) : (
+      <section className="shop-body" id="catalogo" aria-label="Catálogo">
         <div className="wrap">
           <div className="filters">
             <div className="chips" role="tablist" aria-label="Categorías">
+              <button className="chip-back" onClick={() => setCat(null)} aria-label="Volver a las categorías">
+                ← Categorías
+              </button>
               <button role="tab" aria-selected={cat === "todo"} className={cat === "todo" ? "on" : ""} onClick={() => setCat("todo")}>
                 Todo
               </button>
@@ -123,6 +206,9 @@ function Catalog() {
                   {c.label}
                 </button>
               ))}
+              <Link className="chip-link" href="/tienda/arma-tu-pc">
+                Armá tu PC
+              </Link>
             </div>
             <div className="filter-row">
               <label className="search">
@@ -194,6 +280,7 @@ function Catalog() {
           </p>
         </div>
       </section>
+      )}
 
       <StoreInfo />
 
