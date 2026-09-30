@@ -1,5 +1,6 @@
 import type { Schema } from "../resource";
 import { dataClient, listAll } from "../client";
+import { seedIfNeeded } from "../seed";
 import { parseCsv, parseNumber } from "../../../lib/sheet";
 
 // Lee las planillas de proveedores (publicadas como CSV) y actualiza el costo
@@ -13,6 +14,7 @@ const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
 async function run(): Promise<string> {
   const client = await dataClient();
+  await seedIfNeeded().catch((e) => console.error("seed", e));
   const [sources, products] = await Promise.all([
     listAll<Source>((nextToken) => client.models.SupplierSource.list({ limit: 100, nextToken })),
     listAll<Product>((nextToken) => client.models.Product.list({ limit: 500, nextToken })),

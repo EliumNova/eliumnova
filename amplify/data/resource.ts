@@ -90,6 +90,15 @@ const schema = a
       .identifier(["codigo"])
       .authorization((allow) => [allow.group("ADMIN")]),
 
+    // Ajustes internos del sistema (por ejemplo, la marca de carga inicial).
+    Setting: a
+      .model({
+        clave: a.string().required(),
+        valor: a.string(),
+      })
+      .identifier(["clave"])
+      .authorization((allow) => [allow.group("ADMIN")]),
+
     CouponResult: a.customType({
       valido: a.boolean().required(),
       codigo: a.string(),

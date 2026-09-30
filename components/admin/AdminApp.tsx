@@ -15,6 +15,18 @@ import Suppliers from "./Suppliers";
 
 I18n.putVocabularies(translations);
 I18n.setLanguage("es");
+I18n.putVocabulariesForLanguage("es", {
+  "Setup TOTP": "Activá la verificación en dos pasos",
+  "Scan then enter verification code": "Escaneá el código con Google Authenticator (u otra app) e ingresá el número de 6 dígitos",
+  "Copy": "Copiar",
+  "Copied!": "¡Copiado!",
+  "Confirm TOTP Code": "Código de la app",
+  "Code *": "Código *",
+  "Enter your code": "Ingresá el código",
+});
+
+// Verificación en dos pasos (TOTP) obligatoria: al primer ingreso muestra un QR para la app.
+const formFields = { setupTotp: { QR: { totpIssuer: "EliumNova" } } };
 
 const tabs = [
   { id: "resumen", label: "Resumen" },
@@ -40,7 +52,7 @@ export default function AdminApp() {
   configureAmplify();
   return (
     <main className="admin-shell">
-      <Authenticator>{({ signOut, user }) => <Panel email={user?.signInDetails?.loginId ?? ""} signOut={signOut} />}</Authenticator>
+      <Authenticator formFields={formFields}>{({ signOut, user }) => <Panel email={user?.signInDetails?.loginId ?? ""} signOut={signOut} />}</Authenticator>
     </main>
   );
 }

@@ -8,4 +8,17 @@ import { getCatalog } from "./data/get-catalog/resource";
 import { syncSuppliers } from "./data/sync-suppliers/resource";
 
 // Backend de EliumNova: usuarios (Cognito), base de datos (DynamoDB vía AppSync) y funciones (Lambda).
-defineBackend({ auth, data, postConfirmation, validateCoupon, placeOrder, getCatalog, syncSuppliers });
+const backend = defineBackend({ auth, data, postConfirmation, validateCoupon, placeOrder, getCatalog, syncSuppliers });
+
+// Contraseñas fuertes: mínimo 12 caracteres con mayúscula, minúscula, número y símbolo.
+const { cfnUserPool } = backend.auth.resources.cfnResources;
+cfnUserPool.policies = {
+  passwordPolicy: {
+    minimumLength: 12,
+    requireLowercase: true,
+    requireUppercase: true,
+    requireNumbers: true,
+    requireSymbols: true,
+    temporaryPasswordValidityDays: 3,
+  },
+};

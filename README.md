@@ -79,5 +79,8 @@ Sin backend desplegado el sitio sigue funcionando con el catálogo local (`lib/p
 ### Activarlo
 1. Amplify → la app → *App settings → IAM roles*: el rol de servicio necesita `AmplifyBackendDeployFullAccess`.
 2. Conectar la rama y desplegar; `amplify.yml` ya corre `npx ampx pipeline-deploy`.
-3. Poner tu email en `ADMIN_EMAILS` (`amplify/auth/post-confirmation/resource.ts`) y crear la cuenta en `/admin`.
-4. En el panel: *Productos → Importar CSV* con `docs/planilla-productos.csv`; *Códigos* para cupones; *Proveedores* para las planillas.
+3. Crear la cuenta en `/admin` con un email de `ADMIN_EMAILS` (`amplify/auth/post-confirmation/resource.ts`). Pide verificación en dos pasos (app tipo Google Authenticator) y contraseña de 12+ caracteres.
+4. El catálogo (`amplify/data/seed/catalogo.ts`) y los códigos BIENVENIDA / ELIUMNOVA se cargan solos la primera vez que arranca el servidor.
+5. En *Proveedores* cargá las planillas para que los costos se actualicen cada hora.
+
+Encabezados de seguridad (HSTS, CSP, anti-iframe): `customHttp.yml`.

@@ -1,5 +1,6 @@
 import type { Schema } from "../resource";
 import { dataClient, listAll } from "../client";
+import { seedIfNeeded } from "../seed";
 import { priceOf, shop, type Product } from "../../../lib/shop";
 
 // Catálogo público: precios finales en pesos calculados en el servidor.
@@ -39,6 +40,7 @@ export const toProduct = (r: Row): Product => ({
 export const handler: Schema["getCatalog"]["functionHandler"] = async () => {
   if (cache && Date.now() - cache.at < 60_000) return cache.value;
   const client = await dataClient();
+  await seedIfNeeded().catch((e) => console.error("seed", e));
   const [rows, dolar] = await Promise.all([
     listAll<Row>((nextToken) => client.models.Product.list({ limit: 500, nextToken })),
     dolarBlue(),
