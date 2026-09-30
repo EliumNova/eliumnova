@@ -50,11 +50,11 @@ export const shop = {
 
 export type Category = "celulares" | "accesorios" | "audio" | "mac";
 
-export const categories: { id: Category; label: string }[] = [
-  { id: "celulares", label: "Celulares" },
-  { id: "accesorios", label: "Accesorios" },
-  { id: "audio", label: "Audio" },
-  { id: "mac", label: "Mac" },
+export const categories: { id: Category; label: string; bajada: string }[] = [
+  { id: "celulares", label: "Celulares", bajada: "Samsung, Motorola y iPhone" },
+  { id: "mac", label: "Notebooks y Mac", bajada: "MacBook y Mac mini" },
+  { id: "audio", label: "Audio", bajada: "AirPods y auriculares" },
+  { id: "accesorios", label: "Accesorios", bajada: "Cargadores, cables, fundas y templados" },
 ];
 
 export type Product = {
