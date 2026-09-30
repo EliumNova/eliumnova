@@ -307,3 +307,7 @@
   .encargo h2{margin-top:10px}
   .encargo p:not(.kicker){color:var(--muted);margin-top:12px;max-width:56ch}
   @media (max-width:640px){.encargo{padding:28px 22px}.encargo .btn{width:100%;justify-content:center}}
+
+  /* Fotos oficiales de marca (fondo claro): se muestran enteras */
+  .art-pack{background:#F4F7F5}
+  .art-pack img{object-fit:contain;padding:18px}

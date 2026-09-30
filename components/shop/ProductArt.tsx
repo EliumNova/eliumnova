@@ -5,8 +5,8 @@ import type { Product } from "@/lib/shop";
 export default function ProductArt({ p, big = false }: { p: Product; big?: boolean }) {
   if (p.foto) {
     return (
-      <div className={`art${big ? " art-big" : ""}`}>
-        <img src={p.foto} alt={p.nombre} loading="lazy" />
+      <div className={`art${p.foto.startsWith("http") ? " art-pack" : ""}${big ? " art-big" : ""}`}>
+        <img src={p.foto} alt={p.nombre} loading="lazy" referrerPolicy="no-referrer" />
       </div>
     );
   }
