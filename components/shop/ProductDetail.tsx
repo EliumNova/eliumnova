@@ -7,7 +7,7 @@ import ProductArt from "./ProductArt";
 import { gaItem, track } from "@/lib/track";
 
 export default function ProductDetail({ p, onClose }: { p: Product; onClose: () => void }) {
-  const { price, add, setCartOpen } = useShop();
+  const { price, listPrice, onSale, campaign, add, setCartOpen } = useShop();
   const closeRef = useRef<HTMLButtonElement>(null);
   const pr = price(p);
   const closeFn = useRef(onClose);
@@ -37,7 +37,15 @@ export default function ProductDetail({ p, onClose }: { p: Product; onClose: () 
           </p>
           <h2 id="detail-title">{p.nombre}</h2>
           {p.detalle && <p className="muted">{p.detalle}</p>}
-          <p className="price price-big">{pr === null ? "Consultar precio" : money(pr)}</p>
+          <p className="price price-big">
+            {onSale(p) && listPrice(p) !== null && <s className="was">{money(listPrice(p)!)}</s>}
+            {pr === null ? "Consultar precio" : money(pr)}
+          </p>
+          {onSale(p) && campaign && (
+            <p className="sale-note">
+              {campaign.nombre}: {campaign.pct}% off hasta el {campaign.hasta.slice(8)}/{Number(campaign.hasta.slice(5, 7))}.
+            </p>
+          )}
           {pr !== null && needsSena(p) && (
             <p className="muted">Lo reservás con {money(pr * (shop.senaPct / 100))} de seña y pagás el resto al retirar.</p>
           )}

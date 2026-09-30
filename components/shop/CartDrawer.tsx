@@ -6,9 +6,10 @@ import { money, needsSena, shop } from "@/lib/shop";
 import { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
 import { gaItem, track } from "@/lib/track";
+import { cartDiscounts, combo } from "@/lib/promos";
 
 export default function CartDrawer() {
-  const { cart, products, price, setQty, cartOpen, setCartOpen } = useShop();
+  const { cart, products, price, onSale, setQty, cartOpen, setCartOpen } = useShop();
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -28,11 +29,13 @@ export default function CartDrawer() {
   const lines = cart
     .map((l) => {
       const p = products.find((x) => x.id === l.id)!;
-      return { p, qty: l.qty, unit: p ? price(p) : null };
+      return { p, qty: l.qty, unit: p ? price(p) : null, onSale: p ? onSale(p) : false };
     })
     .filter((l) => l.p);
-  const total = lines.reduce((n, l) => n + (l.unit ?? 0) * l.qty, 0);
-  const reserva = lines.reduce((n, l) => n + (l.unit ?? 0) * l.qty * (needsSena(l.p) ? shop.senaPct / 100 : 1), 0);
+  const disc = cartDiscounts(lines, null);
+  const total = disc.total;
+  const factor = disc.subtotal ? total / disc.subtotal : 1;
+  const reserva = Math.round(lines.reduce((n, l) => n + (l.unit ?? 0) * l.qty * (needsSena(l.p) ? shop.senaPct / 100 : 1), 0) * factor);
   const hasConsult = lines.some((l) => l.unit === null);
   const hasEquipos = lines.some((l) => needsSena(l.p));
 
@@ -82,8 +85,14 @@ export default function CartDrawer() {
             </ul>
 
             <dl className="totals">
+              {disc.comboOn && (
+                <div className="disc">
+                  <dt>Combo: {combo.texto}</dt>
+                  <dd>−{money(disc.comboDisc)}</dd>
+                </div>
+              )}
               <div>
-                <dt>Subtotal</dt>
+                <dt>{disc.comboOn ? "Total" : "Subtotal"}</dt>
                 <dd>
                   {money(total)}
                   {hasConsult && <small> + a consultar</small>}
@@ -96,7 +105,10 @@ export default function CartDrawer() {
                 </div>
               )}
             </dl>
-            <p className="fine">Envío y forma de pago se eligen en el paso siguiente.</p>
+            {!disc.comboOn && combo.activo && lines.some((l) => combo.si.includes(l.p.categoria)) === false && (
+              <p className="fine">Combo: {combo.texto}.</p>
+            )}
+            <p className="fine">Envío, forma de pago y códigos de descuento, en el paso siguiente.</p>
 
             <Link className="btn btn-main btn-block" href="/pedido" onClick={() => setCartOpen(false)}>
               Continuar con el pedido

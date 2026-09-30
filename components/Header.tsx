@@ -2,11 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { waLink } from "@/lib/site";
 import { WhatsAppIcon } from "./Icons";
+import CampaignBar from "./CampaignBar";
 
 type Section = "inicio" | "servicio" | "tienda" | "nosotros" | "otra";
 
 export default function Header({ active = "otra" }: { active?: Section }) {
   return (
+    <>
+    <CampaignBar />
     <header className="nav">
       <div className="wrap">
         <Link className="logo" href="/">
@@ -29,5 +32,6 @@ export default function Header({ active = "otra" }: { active?: Section }) {
         </a>
       </div>
     </header>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { waLink } from "@/lib/site";
 import { WhatsAppIcon } from "../Icons";
+import ChannelBox from "../ChannelBox";
 
 const pasos = [
   { t: "Armá tu pedido", d: "Elegí los productos y mandalo por WhatsApp con un toque." },
@@ -66,6 +67,12 @@ export default function StoreInfo() {
               <WhatsAppIcon /> Pedí una cotización
             </a>
           </div>
+        </div>
+      </section>
+
+      <section className="store-band" style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <ChannelBox />
         </div>
       </section>
 

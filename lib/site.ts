@@ -21,6 +21,9 @@ export const site = {
     message: "Hola Eze! Tengo una consulta.",
   },
 
+  // Link del canal de WhatsApp para novedades y ofertas (whatsapp.com/channel/...). Vacío = no se muestra.
+  whatsappChannel: "",
+
   address: {
     street: "Santa Rosa 2706",
     locality: "Rafael Castillo",

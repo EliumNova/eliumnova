@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { fallbackProducts } from "@/lib/products";
 import { priceOf, shop, type Product } from "@/lib/shop";
 import { parseCsv, rowsToProducts } from "@/lib/sheet";
+import { activeCampaign, campaignApplies, discounted, upcomingCampaign, type Campaign } from "@/lib/promos";
 
 type CartLine = { id: string; qty: number };
 type Dolar = { value: number; live: boolean; updated?: string };
@@ -12,7 +13,12 @@ type Ctx = {
   products: Product[];
   source: "planilla" | "respaldo";
   dolar: Dolar;
-  price: (p: Product) => number | null;
+  price: (p: Product) => number | null; // precio final (con campaña si corresponde)
+  listPrice: (p: Product) => number | null; // precio sin campaña
+  onSale: (p: Product) => boolean;
+  campaign: Campaign | null;
+  upcoming: Campaign | null;
+  now: number | null;
   cart: CartLine[];
   add: (id: string) => void;
   setQty: (id: string, qty: number) => void;
@@ -76,7 +82,21 @@ export default function ShopProvider({ children }: { children: ReactNode }) {
     return () => { alive = false; };
   }, []);
 
-  const price = useCallback((p: Product) => priceOf(p, dolar.value), [dolar.value]);
+  // "Ahora" se toma recién en el navegador, así las campañas usan la fecha real del visitante.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => setNow(Date.now()), []);
+  const campaign = useMemo(() => activeCampaign(now), [now]);
+  const upcoming = useMemo(() => upcomingCampaign(now), [now]);
+
+  const listPrice = useCallback((p: Product) => priceOf(p, dolar.value), [dolar.value]);
+  const onSale = useCallback((p: Product) => campaignApplies(campaign, p) && priceOf(p, dolar.value) !== null, [campaign, dolar.value]);
+  const price = useCallback(
+    (p: Product) => {
+      const base = priceOf(p, dolar.value);
+      return base !== null && campaign && campaignApplies(campaign, p) ? discounted(base, campaign.pct) : base;
+    },
+    [dolar.value, campaign],
+  );
 
   const add = useCallback((id: string) => {
     setCart((c) => (c.some((l) => l.id === id) ? c.map((l) => (l.id === id ? { ...l, qty: l.qty + 1 } : l)) : [...c, { id, qty: 1 }]));
@@ -90,6 +110,6 @@ export default function ShopProvider({ children }: { children: ReactNode }) {
   const validCart = useMemo(() => cart.filter((l) => products.some((p) => p.id === l.id)), [cart, products]);
   const count = validCart.reduce((n, l) => n + l.qty, 0);
 
-  const value = { products, source, dolar, price, cart: validCart, add, setQty, clear, count, cartOpen, setCartOpen };
+  const value = { products, source, dolar, price, listPrice, onSale, campaign, upcoming, now, cart: validCart, add, setQty, clear, count, cartOpen, setCartOpen };
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
 }

@@ -8,6 +8,7 @@ import { gaItem, track } from "@/lib/track";
 import { WhatsAppIcon } from "../Icons";
 import ShopProvider, { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
+import { cartDiscounts, combo, findCoupon, type Coupon } from "@/lib/promos";
 
 export default function CheckoutPage() {
   return (
@@ -31,7 +32,7 @@ function orderCode() {
 }
 
 function Checkout() {
-  const { cart, products, price, dolar, clear } = useShop();
+  const { cart, products, price, listPrice, onSale, campaign, now, dolar, clear } = useShop();
   const [nombre, setNombre] = useState("");
   const [tel, setTel] = useState("");
   const [email, setEmail] = useState("");
@@ -42,6 +43,9 @@ function Checkout() {
   const [pago, setPago] = useState(shop.payments[0].id);
   const [nota, setNota] = useState("");
   const [acepto, setAcepto] = useState(false);
+  const [codeInput, setCodeInput] = useState("");
+  const [coupon, setCoupon] = useState<Coupon | null>(null);
+  const [codeMsg, setCodeMsg] = useState("");
   const [done, setDone] = useState<{ code: string; msg: string } | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -52,15 +56,31 @@ function Checkout() {
       cart
         .map((l) => {
           const p = products.find((x) => x.id === l.id);
-          return p ? { p, qty: l.qty, unit: price(p) } : null;
+          return p ? { p, qty: l.qty, unit: price(p), onSale: onSale(p) } : null;
         })
         .filter((l): l is NonNullable<typeof l> => !!l),
-    [cart, products, price],
+    [cart, products, price, onSale],
   );
   const pay = shop.payments.find((x) => x.id === pago)!;
-  const subtotal = lines.reduce((n, l) => n + (l.unit ?? 0) * l.qty, 0);
-  const recargo = Math.round((subtotal * pay.recargo) / 100);
-  const total = subtotal + recargo;
+  const disc = cartDiscounts(lines, coupon);
+  const subtotal = disc.subtotal;
+  const afterDisc = disc.total;
+  const recargo = Math.round((afterDisc * pay.recargo) / 100);
+  const total = afterDisc + recargo;
+  const campaignSaving = lines.reduce((n, l) => n + (l.onSale ? ((listPrice(l.p) ?? 0) - (l.unit ?? 0)) * l.qty : 0), 0);
+
+  function applyCode() {
+    const c = now !== null ? findCoupon(codeInput, now) : null;
+    if (!c) {
+      setCoupon(null);
+      setCodeMsg("Ese código no existe o ya no está vigente.");
+      return;
+    }
+    setCoupon(c);
+    const probe = cartDiscounts(lines, c);
+    setCodeMsg(probe.couponDisc > 0 ? `Aplicado: ${c.descripcion}.` : "El código no aplica a productos que ya tienen descuento.");
+    track("select_promotion", { promotion_id: c.codigo, promotion_name: c.descripcion });
+  }
   const factor = total && subtotal ? total / subtotal : 1;
   const reserva = Math.round(
     lines.reduce((n, l) => n + (l.unit ?? 0) * l.qty * (needsSena(l.p) ? shop.senaPct / 100 : 1), 0) * factor,
@@ -87,6 +107,9 @@ function Checkout() {
       ),
       "",
       `*Subtotal:* ${money(subtotal)}${hasConsult ? " + productos a consultar" : ""}`,
+      ...(campaignSaving > 0 && campaign ? [`*${campaign.nombre}:* ya aplicado (ahorro ${money(campaignSaving)})`] : []),
+      ...(disc.comboDisc ? [`*Combo (${combo.texto}):* −${money(disc.comboDisc)}`] : []),
+      ...(disc.couponDisc && coupon ? [`*Código ${coupon.codigo} (${coupon.pct}%):* −${money(disc.couponDisc)}`] : []),
       ...(recargo ? [`*Recargo ${pay.nombre} (${pay.recargo}%):* ${money(recargo)}`] : []),
       `*Total:* ${money(total)}`,
       ...(hasEquipos ? [`*Para reservar:* ${money(reserva)}`] : []),
@@ -105,7 +128,7 @@ function Checkout() {
 
     const items = lines.map((l) => gaItem(l.p, l.unit, l.qty));
     track("generate_lead", { currency: "ARS", value: total });
-    track("pedido_whatsapp", { transaction_id: code, currency: "ARS", value: total, localidad: localidad.trim(), entrega: ent.nombre, pago: pay.nombre, items });
+    track("pedido_whatsapp", { transaction_id: code, currency: "ARS", value: total, coupon: coupon?.codigo, localidad: localidad.trim(), entrega: ent.nombre, pago: pay.nombre, items });
     if (shop.ordersWebhookUrl) {
       try {
         fetch(shop.ordersWebhookUrl, {
@@ -121,6 +144,8 @@ function Checkout() {
             localidad: localidad.trim(),
             entrega: ent.nombre,
             pago: pay.nombre,
+            descuento: disc.comboDisc + disc.couponDisc + campaignSaving,
+            codigo_descuento: coupon?.codigo ?? "",
             total,
             reserva: hasEquipos ? reserva : total,
             dolar: dolar.value,
@@ -273,11 +298,50 @@ function Checkout() {
             </li>
           ))}
         </ul>
+        <div className="coupon">
+          <label className="field">
+            <span className="sr">Código de descuento</span>
+            <input
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyCode();
+                }
+              }}
+              placeholder="Código de descuento"
+              autoCapitalize="characters"
+            />
+          </label>
+          <button type="button" className="btn btn-line" onClick={applyCode}>
+            Aplicar
+          </button>
+        </div>
+        {codeMsg && <p className="fine code-msg">{codeMsg}</p>}
         <dl className="totals">
           <div>
             <dt>Subtotal</dt>
             <dd>{money(subtotal)}</dd>
           </div>
+          {campaignSaving > 0 && campaign && (
+            <div className="disc">
+              <dt>{campaign.nombre} (ya aplicado)</dt>
+              <dd>−{money(campaignSaving)}</dd>
+            </div>
+          )}
+          {disc.comboDisc > 0 && (
+            <div className="disc">
+              <dt>Combo: {combo.texto}</dt>
+              <dd>−{money(disc.comboDisc)}</dd>
+            </div>
+          )}
+          {disc.couponDisc > 0 && coupon && (
+            <div className="disc">
+              <dt>Código {coupon.codigo}</dt>
+              <dd>−{money(disc.couponDisc)}</dd>
+            </div>
+          )}
           {recargo > 0 && (
             <div>
               <dt>Recargo {pay.nombre}</dt>

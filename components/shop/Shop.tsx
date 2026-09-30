@@ -23,7 +23,7 @@ const today = () =>
   new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 function Catalog() {
-  const { products, price, dolar, add, count, setCartOpen } = useShop();
+  const { products, price, listPrice, onSale, campaign, dolar, add, count, setCartOpen } = useShop();
   const [cat, setCat] = useState<Category | "todo">("todo");
   const [brand, setBrand] = useState("todas");
   const [q, setQ] = useState("");
@@ -157,13 +157,17 @@ function Catalog() {
                     <button className="card-open" onClick={() => show(p)} aria-label={`Ver ${p.nombre}`}>
                       <ProductArt p={p} />
                       <span className={`badge ${p.estado === "Reacondicionado" ? "badge-alt" : ""}`}>{p.estado}</span>
+                      {onSale(p) && campaign && <span className="badge badge-sale">-{campaign.pct}%</span>}
                     </button>
                     <div className="card-body">
                       <h3>
                         <button onClick={() => show(p)}>{p.nombre}</button>
                       </h3>
                       {p.detalle && <p className="muted">{p.detalle}</p>}
-                      <p className="price">{pr === null ? "Consultar precio" : money(pr)}</p>
+                      <p className="price">
+                        {onSale(p) && listPrice(p) !== null && <s className="was">{money(listPrice(p)!)}</s>}
+                        {pr === null ? "Consultar precio" : money(pr)}
+                      </p>
                       <button className="btn btn-main btn-sm" onClick={() => addToCart(p)}>
                         Agregar
                       </button>

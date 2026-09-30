@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { site, waLink } from "@/lib/site";
 import { WhatsAppIcon } from "./Icons";
+import ChannelBox from "./ChannelBox";
 
 export default function Footer({ fab = true }: { fab?: boolean }) {
   return (
@@ -14,6 +15,7 @@ export default function Footer({ fab = true }: { fab?: boolean }) {
               EliumNova
             </Link>
             <p>{site.slogan}</p>
+            <ChannelBox compact />
           </div>
           <nav aria-label="Secciones del sitio">
             <Link href="/servicio-tecnico">Servicio técnico</Link>
