@@ -15,6 +15,7 @@ export default function JsonLd() {
     logo: `${site.url}/img/logo.png`,
     image: `${site.url}/img/og.jpg`,
     telephone: "+54 9 11 6001-8011",
+    taxID: site.cuit,
     address: {
       "@type": "PostalAddress",
       streetAddress: site.address.street,

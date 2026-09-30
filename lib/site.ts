@@ -6,7 +6,10 @@ export const site = {
   name: "EliumNova",
 
   // Métricas: ID de medición de Google Analytics 4 (empieza con G-). Vacío = sin métricas.
-  gaId: "",
+  gaId: "G-YLLKVSY7ZF",
+
+  // Datos fiscales que se muestran en el pie (exigidos para vender online).
+  cuit: "20-44413922-7",
   slogan: "Más que una reparación, una solución.",
   title: "Servicio técnico | EliumNova",
   description:

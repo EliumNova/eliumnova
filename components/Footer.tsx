@@ -34,7 +34,7 @@ export default function Footer({ fab = true }: { fab?: boolean }) {
           </Link>
         </div>
         <div className="wrap foot-legal">
-          <span>© {new Date().getFullYear()} EliumNova · {site.address.street}, {site.address.locality}</span>
+          <span>© {new Date().getFullYear()} EliumNova · {site.address.street}, {site.address.locality} · CUIT {site.cuit}</span>
         </div>
       </footer>
 
