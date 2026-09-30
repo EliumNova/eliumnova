@@ -1,9 +1,9 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { fallbackProducts } from "@/lib/products";
 import { priceOf, shop, type Product } from "@/lib/shop";
 import { parseCsv, rowsToProducts } from "@/lib/sheet";
+import { hasBackend, parseJson, publicApi } from "@/lib/backend";
 import { activeCampaign, campaignApplies, discounted, upcomingCampaign, type Campaign } from "@/lib/promos";
 
 type CartLine = { id: string; qty: number };
@@ -11,7 +11,8 @@ type Dolar = { value: number; live: boolean; updated?: string };
 
 type Ctx = {
   products: Product[];
-  source: "planilla" | "respaldo";
+  source: "servidor" | "planilla" | "respaldo" | "cargando";
+  loading: boolean;
   dolar: Dolar;
   price: (p: Product) => number | null; // precio final (con campaña si corresponde)
   listPrice: (p: Product) => number | null; // precio sin campaña
@@ -28,6 +29,10 @@ type Ctx = {
   setCartOpen: (v: boolean) => void;
 };
 
+// Producto tal como lo entrega el servidor: sin costos, con precio final.
+type PublicProduct = Omit<Product, "costo" | "moneda"> & { precio?: number; consultar?: boolean };
+const fromPublic = (p: PublicProduct): Product => ({ ...p, costo: 0, moneda: "ARS", precio: p.precio, consultar: !p.precio || p.consultar });
+
 const ShopContext = createContext<Ctx | null>(null);
 const CART_KEY = "eliumnova-carrito";
 
@@ -38,8 +43,8 @@ export function useShop() {
 }
 
 export default function ShopProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
-  const [source, setSource] = useState<Ctx["source"]>("respaldo");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [source, setSource] = useState<Ctx["source"]>("cargando");
   const [dolar, setDolar] = useState<Dolar>({ value: shop.dolarFallback, live: false });
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -55,8 +60,34 @@ export default function ShopProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch {}
   }, [cart]);
 
-  // Dólar blue del día.
+  // Catálogo: del servidor si hay backend; si no, catálogo local + planilla.
   useEffect(() => {
+    let alive = true;
+    const loadLocal = () =>
+      import("@/lib/products").then((m) => {
+        if (alive) setProducts((cur) => (cur.length ? cur : m.fallbackProducts));
+        if (alive) setSource((s) => (s === "cargando" ? "respaldo" : s));
+      });
+    if (!hasBackend) {
+      loadLocal();
+      return () => { alive = false; };
+    }
+    Promise.resolve()
+      .then(() => publicApi().queries.getCatalog())
+      .then(({ data }) => {
+        if (!alive || !data) throw new Error("sin datos");
+        const list = parseJson<PublicProduct[]>(data.productos).map(fromPublic);
+        setProducts(list);
+        setDolar({ value: data.dolar, live: !!data.dolarEnVivo, updated: data.actualizado ?? undefined });
+        setSource("servidor");
+      })
+      .catch(() => loadLocal());
+    return () => { alive = false; };
+  }, []);
+
+  // Dólar blue del día (solo sin servidor; con servidor lo calcula el backend).
+  useEffect(() => {
+    if (hasBackend) return;
     let alive = true;
     fetch(shop.dolarApiUrl, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -68,9 +99,9 @@ export default function ShopProvider({ children }: { children: ReactNode }) {
     return () => { alive = false; };
   }, []);
 
-  // Planilla de Google, si está configurada.
+  // Planilla de Google, si está configurada (solo sin servidor).
   useEffect(() => {
-    if (!shop.sheetCsvUrl) return;
+    if (hasBackend || !shop.sheetCsvUrl) return;
     let alive = true;
     fetch(shop.sheetCsvUrl, { cache: "no-store" })
       .then((r) => (r.ok ? r.text() : Promise.reject()))
@@ -110,6 +141,7 @@ export default function ShopProvider({ children }: { children: ReactNode }) {
   const validCart = useMemo(() => cart.filter((l) => products.some((p) => p.id === l.id)), [cart, products]);
   const count = validCart.reduce((n, l) => n + l.qty, 0);
 
-  const value = { products, source, dolar, price, listPrice, onSale, campaign, upcoming, now, cart: validCart, add, setQty, clear, count, cartOpen, setCartOpen };
+  const loading = source === "cargando";
+  const value = { products, source, loading, dolar, price, listPrice, onSale, campaign, upcoming, now, cart: validCart, add, setQty, clear, count, cartOpen, setCartOpen };
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
 }

@@ -38,10 +38,9 @@ export const campaigns: Campaign[] = [
 
 // Códigos que el cliente carga en la pantalla de pedido.
 // No se suman a una campaña: aplican solo a productos que no estén ya en oferta.
-export const coupons: Coupon[] = [
-  { codigo: "BIENVENIDA", pct: 5, descripcion: "5% en tu primera compra" },
-  { codigo: "ELIUMNOVA", pct: 5, descripcion: "5% para seguidores de las redes" },
-];
+// Con el servidor activo, esta lista NO se usa: los códigos se cargan desde el panel /admin
+// y se validan en el servidor (así nadie los ve en el código de la página).
+export const coupons: Coupon[] = [];
 
 // Combo: comprando un producto de "si", los de "aplica" tienen descuento
 // (solo los que no estén ya en oferta).

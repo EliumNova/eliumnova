@@ -4,3 +4,5 @@ out/
 next-env.d.ts.bak
 *.tsbuildinfo
 .DS_Store
+amplify_outputs.json
+.amplify/

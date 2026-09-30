@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { site } from "@/lib/site";
-import { money, needsSena, shop } from "@/lib/shop";
+import { money, needsSena, shop, type Category } from "@/lib/shop";
 import { gaItem, track } from "@/lib/track";
 import { WhatsAppIcon } from "../Icons";
 import ShopProvider, { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
 import { cartDiscounts, combo, findCoupon, type Coupon } from "@/lib/promos";
+import { hasBackend, publicApi } from "@/lib/backend";
 
 export default function CheckoutPage() {
   return (
@@ -69,8 +70,23 @@ function Checkout() {
   const total = afterDisc + recargo;
   const campaignSaving = lines.reduce((n, l) => n + (l.onSale ? ((listPrice(l.p) ?? 0) - (l.unit ?? 0)) * l.qty : 0), 0);
 
-  function applyCode() {
-    const c = now !== null ? findCoupon(codeInput, now) : null;
+  async function applyCode() {
+    let c: Coupon | null = null;
+    if (hasBackend) {
+      setCodeMsg("Verificando…");
+      try {
+        const { data } = await publicApi().queries.validateCoupon({ codigo: codeInput });
+        if (data?.valido && data.codigo && data.pct)
+          c = {
+            codigo: data.codigo,
+            pct: data.pct,
+            descripcion: data.descripcion ?? `${data.pct}% de descuento`,
+            categorias: (data.categorias ?? []).filter((x): x is Category => !!x) as Category[],
+          };
+      } catch {}
+    } else {
+      c = now !== null ? findCoupon(codeInput, now) : null;
+    }
     if (!c) {
       setCoupon(null);
       setCodeMsg("Ese código no existe o ya no está vigente.");
@@ -129,6 +145,31 @@ function Checkout() {
     const items = lines.map((l) => gaItem(l.p, l.unit, l.qty));
     track("generate_lead", { currency: "ARS", value: total });
     track("pedido_whatsapp", { transaction_id: code, currency: "ARS", value: total, coupon: coupon?.codigo, localidad: localidad.trim(), entrega: ent.nombre, pago: pay.nombre, items });
+    if (hasBackend) {
+      Promise.resolve()
+        .then(() => publicApi().mutations.placeOrder({
+          pedido: JSON.stringify({
+            codigo: code,
+            nombre: nombre.trim(),
+            telefono: tel.trim(),
+            email: email.trim(),
+            localidad: localidad.trim(),
+            entrega: ent.nombre,
+            direccion: entrega !== "retiro" ? `${direccion.trim()}${cp.trim() ? ` (CP ${cp.trim()})` : ""}` : "",
+            pago: pay.nombre,
+            items: lines.map((l) => ({ id: l.p.id, nombre: l.p.nombre, categoria: l.p.categoria, marca: l.p.marca, cantidad: l.qty, precio: l.unit, enOferta: l.onSale })),
+            subtotal,
+            descuento: disc.comboDisc + disc.couponDisc + campaignSaving,
+            total,
+            reserva: hasEquipos ? reserva : total,
+            codigoDescuento: coupon?.codigo ?? "",
+            dolar: dolar.value,
+            origen: document.referrer || "directo",
+            nota: nota.trim(),
+          }),
+        }))
+        .catch(() => {});
+    }
     if (shop.ordersWebhookUrl) {
       try {
         fetch(shop.ordersWebhookUrl, {

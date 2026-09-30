@@ -60,3 +60,24 @@ Mientras `sheetCsvUrl` esté vacío, la tienda usa `lib/products.ts`.
 
 ### Pedidos
 El carrito arma el mensaje con un código (EN-DDMM-XXXX) y lo abre en WhatsApp. No hay cobro online: se confirma y cobra por WhatsApp.
+
+## Servidor (AWS Amplify Gen 2)
+
+La carpeta `amplify/` define el backend: usuarios (Cognito, grupo `ADMIN`), base de datos
+(Product, Order, Coupon, SupplierSource) y funciones:
+
+| Función | Qué hace | Quién la usa |
+|---|---|---|
+| `getCatalog` | Devuelve el catálogo activo con precios calculados en el servidor (sin costos) | Tienda (público) |
+| `validateCoupon` | Valida un código de descuento | Checkout (público) |
+| `placeOrder` | Guarda el pedido antes de mandarlo por WhatsApp | Checkout (público) |
+| `syncSuppliersNow` / `sync-suppliers` | Lee las planillas de proveedores y actualiza costos (cada 1 h y a demanda) | Panel |
+
+Panel de gestión en `/admin` (solo usuarios del grupo `ADMIN`).
+Sin backend desplegado el sitio sigue funcionando con el catálogo local (`lib/products.ts`).
+
+### Activarlo
+1. Amplify → la app → *App settings → IAM roles*: el rol de servicio necesita `AmplifyBackendDeployFullAccess`.
+2. Conectar la rama y desplegar; `amplify.yml` ya corre `npx ampx pipeline-deploy`.
+3. Poner tu email en `ADMIN_EMAILS` (`amplify/auth/post-confirmation/resource.ts`) y crear la cuenta en `/admin`.
+4. En el panel: *Productos → Importar CSV* con `docs/planilla-productos.csv`; *Códigos* para cupones; *Proveedores* para las planillas.

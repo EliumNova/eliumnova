@@ -23,7 +23,7 @@ const today = () =>
   new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 function Catalog() {
-  const { products, price, listPrice, onSale, campaign, dolar, add, count, setCartOpen } = useShop();
+  const { products, price, listPrice, onSale, campaign, dolar, add, count, setCartOpen, loading } = useShop();
   const [cat, setCat] = useState<Category | "todo">("todo");
   const [brand, setBrand] = useState("todas");
   const [q, setQ] = useState("");
@@ -148,7 +148,9 @@ function Catalog() {
             </div>
           </div>
 
-          {list.length ? (
+          {loading ? (
+            <p className="empty">Cargando catálogo…</p>
+          ) : list.length ? (
             <div className="products">
               {list.map((p) => {
                 const pr = price(p);
