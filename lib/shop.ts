@@ -51,7 +51,7 @@ export const shop = {
 export type Category = "celulares" | "accesorios" | "audio" | "mac";
 
 export const categories: { id: Category; label: string; bajada: string }[] = [
-  { id: "celulares", label: "Celulares", bajada: "Samsung, Motorola y iPhone" },
+  { id: "celulares", label: "Celulares", bajada: "iPhone, Samsung, Motorola, Xiaomi y más" },
   { id: "mac", label: "Notebooks y Mac", bajada: "MacBook y Mac mini" },
   { id: "audio", label: "Audio", bajada: "AirPods y auriculares" },
   { id: "accesorios", label: "Accesorios", bajada: "Cargadores, cables, fundas y templados" },
