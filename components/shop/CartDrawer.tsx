@@ -6,6 +6,7 @@ import { site } from "@/lib/site";
 import { money, needsSena, shop } from "@/lib/shop";
 import { WhatsAppIcon } from "../Icons";
 import { useShop } from "./ShopProvider";
+import { gaItem, track } from "@/lib/track";
 
 const entregas = [
   "Retiro en el taller (Rafael Castillo, sin costo)",
@@ -22,14 +23,22 @@ function orderCode() {
 }
 
 export default function CartDrawer() {
-  const { cart, products, price, setQty, clear, cartOpen, setCartOpen } = useShop();
+  const { cart, products, price, setQty, clear, cartOpen, setCartOpen, dolar } = useShop();
   const [nombre, setNombre] = useState("");
+  const [localidad, setLocalidad] = useState("");
   const [entrega, setEntrega] = useState(entregas[0]);
   const [sent, setSent] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!cartOpen) return;
+    const ls = cart.map((l) => ({ p: products.find((x) => x.id === l.id), qty: l.qty })).filter((l) => l.p);
+    if (ls.length)
+      track("begin_checkout", {
+        currency: "ARS",
+        value: ls.reduce((n, l) => n + (price(l.p!) ?? 0) * l.qty, 0),
+        items: ls.map((l) => gaItem(l.p!, price(l.p!), l.qty)),
+      });
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setCartOpen(false);
     document.addEventListener("keydown", onKey);
@@ -38,6 +47,7 @@ export default function CartDrawer() {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cartOpen, setCartOpen]);
 
   if (!cartOpen) return null;
@@ -68,12 +78,39 @@ export default function CartDrawer() {
       `*Total:* ${money(total)}${hasConsult ? " + productos a consultar" : ""}`,
       ...(hasEquipos ? [`*Para reservar:* ${money(reserva)}`] : []),
       `*Entrega:* ${entrega}`,
+      `*Localidad:* ${localidad.trim()}`,
       ...(nombre.trim() ? [`*Nombre:* ${nombre.trim()}`] : []),
       "",
       `Precios vistos en la web el ${fecha}.`,
     ].join("\n");
     window.open(`https://wa.me/${site.whatsapp.number}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
     setSent(code);
+
+    // Métricas y registro del pedido en la planilla.
+    const items = lines.map((l) => gaItem(l.p, l.unit, l.qty));
+    track("generate_lead", { currency: "ARS", value: total });
+    track("pedido_whatsapp", { transaction_id: code, currency: "ARS", value: total, localidad: localidad.trim(), entrega, items });
+    if (shop.ordersWebhookUrl) {
+      try {
+        fetch(shop.ordersWebhookUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            codigo: code,
+            fecha: new Date().toISOString(),
+            nombre: nombre.trim(),
+            localidad: localidad.trim(),
+            entrega,
+            total,
+            reserva: hasEquipos ? reserva : total,
+            dolar: dolar.value,
+            origen: document.referrer || "directo",
+            items: lines.map((l) => ({ id: l.p.id, nombre: l.p.nombre, categoria: l.p.categoria, marca: l.p.marca, cantidad: l.qty, precio: l.unit })),
+          }),
+        }).catch(() => {});
+      } catch {}
+    }
   }
 
   return (
@@ -116,7 +153,14 @@ export default function CartDrawer() {
                     <small>{l.unit === null ? "Consultar precio" : money(l.unit)}</small>
                   </div>
                   <div className="qty">
-                    <button type="button" onClick={() => setQty(l.p.id, l.qty - 1)} aria-label={`Quitar uno de ${l.p.nombre}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQty(l.p.id, l.qty - 1);
+                        track("remove_from_cart", { currency: "ARS", value: l.unit ?? undefined, items: [gaItem(l.p, l.unit)] });
+                      }}
+                      aria-label={`Quitar uno de ${l.p.nombre}`}
+                    >
                       −
                     </button>
                     <span aria-live="polite">{l.qty}</span>
@@ -148,6 +192,10 @@ export default function CartDrawer() {
             <label className="field">
               <span>Tu nombre</span>
               <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Juan" autoComplete="given-name" />
+            </label>
+            <label className="field">
+              <span>Localidad o barrio</span>
+              <input value={localidad} onChange={(e) => setLocalidad(e.target.value)} placeholder="Ej. San Justo, Palermo, Morón" required autoComplete="address-level2" />
             </label>
             <label className="field">
               <span>Entrega</span>

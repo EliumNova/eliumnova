@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { money, needsSena, shop, type Product } from "@/lib/shop";
 import { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
+import { gaItem, track } from "@/lib/track";
 
 export default function ProductDetail({ p, onClose }: { p: Product; onClose: () => void }) {
   const { price, add, setCartOpen } = useShop();
@@ -68,6 +69,7 @@ export default function ProductDetail({ p, onClose }: { p: Product; onClose: () 
             className="btn btn-main"
             onClick={() => {
               add(p.id);
+              track("add_to_cart", { currency: "ARS", value: pr ?? undefined, items: [gaItem(p, pr)] });
               onClose();
               setCartOpen(true);
             }}

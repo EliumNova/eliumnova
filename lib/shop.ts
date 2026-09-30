@@ -6,6 +6,10 @@ export const shop = {
   // Mientras esté vacío, la tienda usa el catálogo de lib/products.ts.
   sheetCsvUrl: "",
 
+  // Registro automático de pedidos en la planilla (URL de la app web de Apps Script,
+  // ver docs/apps-script-pedidos.gs). Vacío = no se registran.
+  ordersWebhookUrl: "",
+
   // Cotización en vivo del dólar blue (se usa el valor de venta).
   dolarApiUrl: "https://dolarapi.com/v1/dolares/blue",
   // Si la API no responde, se usa este valor.

@@ -4,6 +4,9 @@
 export const site = {
   url: "https://eliumnova.com.ar", // cambiar cuando tengas dominio propio (ej: https://eliumnova.com.ar)
   name: "EliumNova",
+
+  // Métricas: ID de medición de Google Analytics 4 (empieza con G-). Vacío = sin métricas.
+  gaId: "",
   slogan: "Más que una reparación, una solución.",
   title: "Servicio técnico | EliumNova",
   description:

@@ -7,7 +7,13 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "EliumNova",
     short_name: "EliumNova",
     start_url: "/",
+    description: "Servicio técnico y tienda de tecnología en Rafael Castillo, La Matanza.",
     display: "standalone",
+    lang: "es-AR",
+    shortcuts: [
+      { name: "Tienda", url: "/tienda" },
+      { name: "Servicio técnico", url: "/servicio-tecnico" },
+    ],
     background_color: "#050706",
     theme_color: "#050706",
     icons: [

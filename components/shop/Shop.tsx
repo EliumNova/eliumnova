@@ -6,6 +6,8 @@ import ShopProvider, { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
 import ProductDetail from "./ProductDetail";
 import CartDrawer from "./CartDrawer";
+import StoreInfo from "./StoreInfo";
+import { gaItem, track } from "@/lib/track";
 
 type Sort = "destacados" | "menor" | "mayor";
 
@@ -42,6 +44,7 @@ function Catalog() {
 
   function show(p: Product | null) {
     setOpen(p);
+    if (p) track("view_item", { currency: "ARS", value: price(p) ?? undefined, items: [gaItem(p, price(p))] });
     const url = new URL(window.location.href);
     if (p) url.searchParams.set("p", p.id);
     else url.searchParams.delete("p");
@@ -56,6 +59,23 @@ function Catalog() {
   useEffect(() => {
     if (brand !== "todas" && !brands.includes(brand)) setBrand("todas");
   }, [brands, brand]);
+
+  // Métricas: qué categorías miran y qué buscan.
+  useEffect(() => {
+    if (cat !== "todo") track("view_item_list", { item_list_id: cat, item_list_name: cat });
+  }, [cat]);
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 3) return;
+    const t = setTimeout(() => track("search", { search_term: term }), 1200);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  function addToCart(p: Product) {
+    add(p.id);
+    track("add_to_cart", { currency: "ARS", value: price(p) ?? undefined, items: [gaItem(p, price(p))] });
+    setCartOpen(true);
+  }
 
   const list = useMemo(() => {
     const term = q.trim().toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
@@ -144,7 +164,7 @@ function Catalog() {
                       </h3>
                       {p.detalle && <p className="muted">{p.detalle}</p>}
                       <p className="price">{pr === null ? "Consultar precio" : money(pr)}</p>
-                      <button className="btn btn-main btn-sm" onClick={() => { add(p.id); setCartOpen(true); }}>
+                      <button className="btn btn-main btn-sm" onClick={() => addToCart(p)}>
                         Agregar
                       </button>
                     </div>
@@ -165,6 +185,8 @@ function Catalog() {
           </p>
         </div>
       </section>
+
+      <StoreInfo />
 
       {count > 0 && (
         <button className="cart-fab" onClick={() => setCartOpen(true)} aria-label={`Ver carrito, ${count} productos`}>

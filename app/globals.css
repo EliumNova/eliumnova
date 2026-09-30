@@ -293,3 +293,17 @@
   .regret{padding:10px 16px;border-radius:999px;border:1px solid var(--green);color:var(--ink);font-weight:600}
   .regret:hover{background:var(--green);color:#02140C}
   .foot-legal{border-top:1px solid var(--line);padding-block:18px!important;color:var(--muted);font-size:13px}
+
+  /* ───────── Tienda: info ───────── */
+  .store-band{padding-block:72px}
+  .pasos{list-style:none;padding:0;margin:36px 0 0;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .pasos li{background:var(--bg-2);border:1px solid var(--line);border-radius:20px;padding:24px 22px;display:grid;gap:8px;align-content:start}
+  .pasos span{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(4,191,123,.12);color:var(--green);font-family:var(--display);font-weight:700}
+  .pasos b{font-family:var(--display);font-size:19px;margin-top:6px}
+  .pasos p{color:var(--muted);font-size:15px}
+  @media (max-width:900px){.pasos{grid-template-columns:1fr 1fr}}
+  @media (max-width:480px){.pasos{grid-template-columns:1fr}}
+  .encargo{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:24px;background:linear-gradient(135deg,rgba(4,191,123,.16),rgba(4,191,186,.06));border:1px solid rgba(4,191,123,.3);border-radius:28px;padding:40px 36px}
+  .encargo h2{margin-top:10px}
+  .encargo p:not(.kicker){color:var(--muted);margin-top:12px;max-width:56ch}
+  @media (max-width:640px){.encargo{padding:28px 22px}.encargo .btn{width:100%;justify-content:center}}
