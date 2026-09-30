@@ -24,7 +24,7 @@ const faq = [
   },
   {
     q: "¿Cómo pago?",
-    a: "Transferencia o efectivo. Te pasamos los datos por WhatsApp cuando confirmamos el pedido.",
+    a: "Efectivo en pesos o dólares, transferencia en pesos o USDT. Te pasamos los datos por WhatsApp cuando confirmamos el pedido. Por ahora no trabajamos con tarjetas.",
   },
   {
     q: "¿Hacen envíos?",

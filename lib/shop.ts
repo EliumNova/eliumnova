@@ -21,6 +21,31 @@ export const shop = {
   // Seña para reservar equipos (celulares y Mac).
   senaPct: 50,
   senaCategories: ["celulares", "mac"] as string[],
+
+  // Formas de pago que se ofrecen al confirmar el pedido.
+  // recargo = % que se suma al total (0 = sin recargo).
+  payments: [
+    {
+      id: "efectivo",
+      nombre: "Efectivo",
+      detalle: "Pesos o dólares al valor del dólar blue del día, al retirar o al recibir. Podés combinar ambas monedas.",
+      recargo: 0,
+    },
+    {
+      id: "transferencia",
+      nombre: "Transferencia en pesos",
+      detalle: "Te pasamos el alias por WhatsApp al confirmar el pedido. Mandanos el comprobante por el mismo chat.",
+      recargo: 0,
+    },
+    {
+      id: "usdt",
+      nombre: "USDT",
+      detalle: "Te pasamos la billetera por WhatsApp al confirmar el pedido.",
+      recargo: 0,
+    },
+  ],
+  sinTarjeta:
+    "Por ahora no trabajamos con tarjetas de crédito ni débito: así mantenemos los precios más bajos y las condiciones claras.",
 };
 
 export type Category = "celulares" | "accesorios" | "audio" | "mac";

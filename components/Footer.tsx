@@ -20,6 +20,8 @@ export default function Footer({ fab = true }: { fab?: boolean }) {
             <Link href="/tienda">Tienda</Link>
             <Link href="/como-comprar">Cómo comprar</Link>
             <Link href="/como-comprar#garantia">Garantía y devoluciones</Link>
+            <Link href="/sobre-nosotros">Sobre nosotros</Link>
+            <Link href="/terminos">Términos y condiciones</Link>
             <Link href="/privacidad">Privacidad</Link>
           </nav>
           <nav aria-label="Redes">

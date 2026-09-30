@@ -3,7 +3,7 @@ import Link from "next/link";
 import { waLink } from "@/lib/site";
 import { WhatsAppIcon } from "./Icons";
 
-type Section = "inicio" | "servicio" | "tienda" | "otra";
+type Section = "inicio" | "servicio" | "tienda" | "nosotros" | "otra";
 
 export default function Header({ active = "otra" }: { active?: Section }) {
   return (
@@ -19,6 +19,9 @@ export default function Header({ active = "otra" }: { active?: Section }) {
           </Link>
           <Link href="/tienda" aria-current={active === "tienda" ? "page" : undefined}>
             Tienda
+          </Link>
+          <Link className="menu-extra" href="/sobre-nosotros" aria-current={active === "nosotros" ? "page" : undefined}>
+            Nosotros
           </Link>
         </nav>
         <a className="btn btn-main nav-wa" href={waLink} target="_blank" rel="noopener" aria-label="WhatsApp">

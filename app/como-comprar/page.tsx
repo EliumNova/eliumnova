@@ -40,7 +40,7 @@ export default function ComoComprar() {
             </ol>
 
             <h2 id="pagos">Pagos</h2>
-            <p>Transferencia bancaria o efectivo al retirar. Te pasamos los datos de pago por WhatsApp junto con la confirmación del pedido.</p>
+            <p>Efectivo (pesos o dólares al valor del dólar blue del día), transferencia en pesos o USDT. Te pasamos los datos de pago por WhatsApp junto con la confirmación del pedido. Por ahora no trabajamos con tarjetas.</p>
 
             <h2 id="entrega">Retiro y envío</h2>
             <ul>
