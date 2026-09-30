@@ -1,14 +1,14 @@
 id,nombre,categoria,marca,estado,costo,moneda,precio,consultar,detalle,compat,plazo,garantia,nota,foto,destacado,activo
 samsung-a06-64,Samsung Galaxy A06,celulares,Samsung,Nuevo,145,USD,,,4 GB · 64 GB,,24 a 48 h,6 meses,,,,si
 samsung-a16-128,Samsung Galaxy A16,celulares,Samsung,Nuevo,170,USD,,,4 GB · 128 GB,,24 a 48 h,6 meses,,,si,si
-samsung-a07-128,Samsung Galaxy A07,celulares,Samsung,Nuevo,180,USD,,,4 GB · 128 GB,,24 a 48 h,6 meses,,,,si
+samsung-a07-128,Samsung Galaxy A07,celulares,Samsung,Nuevo,180,USD,,,4 GB · 128 GB,,24 a 48 h,6 meses,,https://eliumnova.com.ar/img/productos/samsung-a07-128.webp,,si
 samsung-a17-128,Samsung Galaxy A17,celulares,Samsung,Nuevo,185,USD,,,4 GB · 128 GB,,24 a 48 h,6 meses,,,,si
 samsung-a17-256,Samsung Galaxy A17,celulares,Samsung,Nuevo,265,USD,,,8 GB · 256 GB,,24 a 48 h,6 meses,,,,si
 samsung-a36-256,Samsung Galaxy A36 5G,celulares,Samsung,Nuevo,330,USD,,,8 GB · 256 GB,,24 a 48 h,6 meses,,,,si
 moto-g06-128,Motorola Moto G06,celulares,Motorola,Nuevo,165,USD,,,4 GB · 128 GB,,24 a 48 h,6 meses,,,,si
 moto-g15-256,Motorola Moto G15,celulares,Motorola,Nuevo,190,USD,,,4 GB · 256 GB,,24 a 48 h,6 meses,,,si,si
 moto-g35-256,Motorola Moto G35 5G,celulares,Motorola,Nuevo,205,USD,,,4 GB · 256 GB,,24 a 48 h,6 meses,,,,si
-moto-g56-256,Motorola Moto G56 5G,celulares,Motorola,Nuevo,275,USD,,,8 GB · 256 GB,,24 a 48 h,6 meses,,,,si
+moto-g56-256,Motorola Moto G56 5G,celulares,Motorola,Nuevo,275,USD,,,8 GB · 256 GB,,24 a 48 h,6 meses,,https://eliumnova.com.ar/img/productos/moto-g56-256.webp,,si
 iphone-13-128-usado,iPhone 13,celulares,Apple,Reacondicionado,309,USD,,,128 GB · batería 82–100%,,3 a 5 días hábiles,3 meses,Revisado en el taller antes de entregarlo. Te pasamos el % de batería exacto por WhatsApp.,https://eliumnova.com.ar/img/productos/iphone-13-128-usado.webp,si,si
 iphone-13-pro-128-usado,iPhone 13 Pro,celulares,Apple,Reacondicionado,390,USD,,,128 GB · batería 100%,,24 a 48 h,3 meses,Revisado en el taller antes de entregarlo.,https://eliumnova.com.ar/img/productos/iphone-13-pro-128-usado.webp,,si
 airpods-4,AirPods 4,audio,Apple,Sellado,130,USD,,,"Originales, versión EE.UU.",,2 a 4 días hábiles,6 meses,,,si,si
