@@ -188,10 +188,10 @@
   .chips::-webkit-scrollbar{display:none}
   .chips button{flex:none;font:500 14px/1 var(--body);color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:999px;padding:10px 16px;cursor:pointer}
   .chips button.on{color:#02140C;background:var(--green);border-color:var(--green)}
-  .filter-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px}
+  .filter-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:stretch}
   .filter-row input,.filter-row select,.field input,.field select{width:100%;font:400 15px/1.4 var(--body);color:var(--ink);background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:11px 14px;color-scheme:dark}
   .filter-row input:focus,.filter-row select:focus,.field input:focus,.field select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(4,191,123,.18)}
-  @media (max-width:640px){.filter-row{grid-template-columns:1fr 1fr}.filter-row .search{grid-column:1/-1}}
+  @media (max-width:640px){.filter-row{grid-template-columns:1fr 1fr}.filter-row .search,.filter-row .moneda{grid-column:1/-1}}
 
   .products{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:24px}
   @media (max-width:1000px){.products{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -384,3 +384,15 @@
   .coupon .btn{padding:11px 16px;cursor:pointer}
   .code-msg{margin-top:-6px!important}
   .channel-link{display:inline-flex;align-items:center;gap:8px;color:var(--green)!important;font-weight:500}
+
+  /* Selector de moneda */
+  .moneda{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px;justify-self:start}
+  .filter-row .moneda{justify-self:stretch}
+  .moneda button{border:0;background:transparent;color:var(--muted);font:500 14px/1 var(--body);padding:9px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
+  .moneda button.on{background:var(--green);color:#02140C;font-weight:700}
+  .moneda button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .price .alt,.totals .alt{display:block;font-family:var(--body);font-weight:400;font-size:13px;color:var(--muted);margin-top:2px}
+  .price-big .alt{font-size:16px}
+  .summary-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .summary-head h2{margin:0}
+  .drawer .moneda{margin:6px 0 4px}

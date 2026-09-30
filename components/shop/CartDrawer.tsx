@@ -2,14 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { money, needsSena, shop } from "@/lib/shop";
+import { needsSena, shop } from "@/lib/shop";
 import { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
+import MonedaToggle from "./MonedaToggle";
 import { gaItem, track } from "@/lib/track";
 import { cartDiscounts, combo } from "@/lib/promos";
 
 export default function CartDrawer() {
-  const { cart, products, price, onSale, setQty, cartOpen, setCartOpen } = useShop();
+  const { cart, products, price, onSale, setQty, cartOpen, setCartOpen, fmt, alt } = useShop();
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function CartDrawer() {
                   <div className="line-info">
                     <b>{l.p.nombre}</b>
                     {l.p.detalle && <small>{l.p.detalle}</small>}
-                    <small>{l.unit === null ? "Consultar precio" : money(l.unit)}</small>
+                    <small>{l.unit === null ? "Consultar precio" : fmt(l.unit)}</small>
                   </div>
                   <div className="qty">
                     <button
@@ -84,24 +85,29 @@ export default function CartDrawer() {
               ))}
             </ul>
 
+            <MonedaToggle compact />
             <dl className="totals">
               {disc.comboOn && (
                 <div className="disc">
                   <dt>Combo: {combo.texto}</dt>
-                  <dd>−{money(disc.comboDisc)}</dd>
+                  <dd>−{fmt(disc.comboDisc)}</dd>
                 </div>
               )}
               <div>
                 <dt>{disc.comboOn ? "Total" : "Subtotal"}</dt>
                 <dd>
-                  {money(total)}
+                  {fmt(total)}
                   {hasConsult && <small> + a consultar</small>}
+                  <small className="alt">{alt(total)}</small>
                 </dd>
               </div>
               {hasEquipos && (
                 <div>
                   <dt>Para reservar</dt>
-                  <dd>{money(reserva)}</dd>
+                  <dd>
+                    {fmt(reserva)}
+                    <small className="alt">{alt(reserva)}</small>
+                  </dd>
                 </div>
               )}
             </dl>

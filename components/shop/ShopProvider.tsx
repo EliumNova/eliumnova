@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { fallbackProducts } from "@/lib/products";
-import { priceOf, shop, type Product } from "@/lib/shop";
+import { inMoneda, priceOf, shop, type Moneda, type Product } from "@/lib/shop";
 import { parseCsv, rowsToProducts } from "@/lib/sheet";
 import { activeCampaign, campaignApplies, discounted, upcomingCampaign, type Campaign } from "@/lib/promos";
 
@@ -10,6 +10,10 @@ type CartLine = { id: string; qty: number };
 type Dolar = { value: number; live: boolean; updated?: string };
 
 type Ctx = {
+  moneda: Moneda;
+  setMoneda: (m: Moneda) => void;
+  fmt: (ars: number) => string; // precio en la moneda elegida
+  alt: (ars: number) => string; // precio en la otra moneda
   products: Product[];
   source: "planilla" | "respaldo";
   dolar: Dolar;
@@ -30,6 +34,7 @@ type Ctx = {
 
 const ShopContext = createContext<Ctx | null>(null);
 const CART_KEY = "eliumnova-carrito";
+const MONEDA_KEY = "eliumnova-moneda";
 
 export function useShop() {
   const ctx = useContext(ShopContext);
@@ -110,6 +115,22 @@ export default function ShopProvider({ children }: { children: ReactNode }) {
   const validCart = useMemo(() => cart.filter((l) => products.some((p) => p.id === l.id)), [cart, products]);
   const count = validCart.reduce((n, l) => n + l.qty, 0);
 
-  const value = { products, source, dolar, price, listPrice, onSale, campaign, upcoming, now, cart: validCart, add, setQty, clear, count, cartOpen, setCartOpen };
+  // Moneda en la que el visitante quiere ver los precios (se recuerda en su navegador).
+  const [moneda, setMonedaState] = useState<Moneda>("ARS");
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(MONEDA_KEY) === "USD") setMonedaState("USD");
+    } catch {}
+  }, []);
+  const setMoneda = useCallback((m: Moneda) => {
+    setMonedaState(m);
+    try { localStorage.setItem(MONEDA_KEY, m); } catch {}
+  }, []);
+  /** Precio en pesos → texto en la moneda elegida. */
+  const fmt = useCallback((ars: number) => inMoneda(ars, moneda, dolar.value), [moneda, dolar.value]);
+  /** Precio en pesos → texto en la otra moneda. */
+  const alt = useCallback((ars: number) => inMoneda(ars, moneda === "USD" ? "ARS" : "USD", dolar.value), [moneda, dolar.value]);
+
+  const value = { moneda, setMoneda, fmt, alt, products, source, dolar, price, listPrice, onSale, campaign, upcoming, now, cart: validCart, add, setQty, clear, count, cartOpen, setCartOpen };
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
 }

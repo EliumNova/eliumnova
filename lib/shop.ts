@@ -95,4 +95,14 @@ export function priceOf(p: Product, dolar: number): number | null {
 export const money = (n: number) =>
   "$" + Math.round(n).toLocaleString("es-AR", { maximumFractionDigits: 0 });
 
+export type Moneda = "ARS" | "USD";
+
+/** Equivalente en dólares de un precio en pesos (redondeado hacia arriba al dólar). */
+export const toUsd = (ars: number, dolar: number) => Math.ceil(ars / dolar);
+export const usd = (n: number) => "US$ " + Math.round(n).toLocaleString("es-AR", { maximumFractionDigits: 0 });
+/** Formatea un precio en pesos en la moneda elegida. */
+export const inMoneda = (ars: number, moneda: Moneda, dolar: number) => (moneda === "USD" ? usd(toUsd(ars, dolar)) : money(ars));
+/** "$729.900 / US$ 468" */
+export const both = (ars: number, dolar: number) => `${money(ars)} / ${usd(toUsd(ars, dolar))}`;
+
 export const needsSena = (p: Product) => shop.senaCategories.includes(p.categoria);

@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { site } from "@/lib/site";
-import { money, needsSena, shop } from "@/lib/shop";
+import { both, money, needsSena, shop } from "@/lib/shop";
 import { gaItem, track } from "@/lib/track";
 import { WhatsAppIcon } from "../Icons";
 import ShopProvider, { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
+import MonedaToggle from "./MonedaToggle";
 import { cartDiscounts, combo, findCoupon, type Coupon } from "@/lib/promos";
 
 export default function CheckoutPage() {
@@ -32,7 +33,8 @@ function orderCode() {
 }
 
 function Checkout() {
-  const { cart, products, price, listPrice, onSale, campaign, now, dolar, clear } = useShop();
+  const { cart, products, price, listPrice, onSale, campaign, now, dolar, clear, fmt, alt, moneda } = useShop();
+  const b = (n: number) => both(n, dolar.value);
   const [nombre, setNombre] = useState("");
   const [tel, setTel] = useState("");
   const [email, setEmail] = useState("");
@@ -103,17 +105,18 @@ function Checkout() {
       `Hola EliumNova! Quiero confirmar este pedido (${code}):`,
       "",
       ...lines.map(
-        (l) => `• ${l.qty}x ${l.p.nombre}${l.p.detalle ? ` (${l.p.detalle})` : ""} — ${l.unit === null ? "a consultar" : money(l.unit * l.qty)}`,
+        (l) => `• ${l.qty}x ${l.p.nombre}${l.p.detalle ? ` (${l.p.detalle})` : ""} — ${l.unit === null ? "a consultar" : b(l.unit * l.qty)}`,
       ),
       "",
-      `*Subtotal:* ${money(subtotal)}${hasConsult ? " + productos a consultar" : ""}`,
-      ...(campaignSaving > 0 && campaign ? [`*${campaign.nombre}:* ya aplicado (ahorro ${money(campaignSaving)})`] : []),
-      ...(disc.comboDisc ? [`*Combo (${combo.texto}):* −${money(disc.comboDisc)}`] : []),
-      ...(disc.couponDisc && coupon ? [`*Código ${coupon.codigo} (${coupon.pct}%):* −${money(disc.couponDisc)}`] : []),
-      ...(recargo ? [`*Recargo ${pay.nombre} (${pay.recargo}%):* ${money(recargo)}`] : []),
-      `*Total:* ${money(total)}`,
-      ...(hasEquipos ? [`*Para reservar:* ${money(reserva)}`] : []),
+      `*Subtotal:* ${b(subtotal)}${hasConsult ? " + productos a consultar" : ""}`,
+      ...(campaignSaving > 0 && campaign ? [`*${campaign.nombre}:* ya aplicado (ahorro ${b(campaignSaving)})`] : []),
+      ...(disc.comboDisc ? [`*Combo (${combo.texto}):* −${b(disc.comboDisc)}`] : []),
+      ...(disc.couponDisc && coupon ? [`*Código ${coupon.codigo} (${coupon.pct}%):* −${b(disc.couponDisc)}`] : []),
+      ...(recargo ? [`*Recargo ${pay.nombre} (${pay.recargo}%):* ${b(recargo)}`] : []),
+      `*Total:* ${b(total)}`,
+      ...(hasEquipos ? [`*Para reservar:* ${b(reserva)}`] : []),
       `*Pago:* ${pay.nombre}`,
+      `*Moneda elegida en la web:* ${moneda === "USD" ? "dólares" : "pesos"}`,
       `*Entrega:* ${ent.nombre}`,
       ...(entrega !== "retiro" ? [`*Dirección:* ${direccion.trim()}, ${localidad.trim()}${cp.trim() ? ` (CP ${cp.trim()})` : ""}`] : [`*Localidad:* ${localidad.trim()}`]),
       `*Nombre:* ${nombre.trim()}`,
@@ -121,7 +124,7 @@ function Checkout() {
       ...(email.trim() ? [`*Email:* ${email.trim()}`] : []),
       ...(nota.trim() ? [`*Nota:* ${nota.trim()}`] : []),
       "",
-      `Precios vistos en la web el ${fecha}.`,
+      `Precios vistos en la web el ${fecha}, dólar de referencia ${money(dolar.value)}.`,
     ].join("\n");
     window.open(`https://wa.me/${site.whatsapp.number}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
     setDone({ code, msg });
@@ -282,7 +285,10 @@ function Checkout() {
       </div>
 
       <aside className="co-summary" aria-label="Resumen del pedido">
-        <h2>Resumen</h2>
+        <div className="summary-head">
+          <h2>Resumen</h2>
+          <MonedaToggle compact />
+        </div>
         <ul className="lines">
           {lines.map((l) => (
             <li key={l.p.id}>
@@ -294,7 +300,7 @@ function Checkout() {
                 <b>{l.p.nombre}</b>
                 {l.p.detalle && <small>{l.p.detalle}</small>}
               </div>
-              <span className="line-price">{l.unit === null ? "Consultar" : money(l.unit * l.qty)}</span>
+              <span className="line-price">{l.unit === null ? "Consultar" : fmt(l.unit * l.qty)}</span>
             </li>
           ))}
         </ul>
@@ -322,30 +328,30 @@ function Checkout() {
         <dl className="totals">
           <div>
             <dt>Subtotal</dt>
-            <dd>{money(subtotal)}</dd>
+            <dd>{fmt(subtotal)}</dd>
           </div>
           {campaignSaving > 0 && campaign && (
             <div className="disc">
               <dt>{campaign.nombre} (ya aplicado)</dt>
-              <dd>−{money(campaignSaving)}</dd>
+              <dd>−{fmt(campaignSaving)}</dd>
             </div>
           )}
           {disc.comboDisc > 0 && (
             <div className="disc">
               <dt>Combo: {combo.texto}</dt>
-              <dd>−{money(disc.comboDisc)}</dd>
+              <dd>−{fmt(disc.comboDisc)}</dd>
             </div>
           )}
           {disc.couponDisc > 0 && coupon && (
             <div className="disc">
               <dt>Código {coupon.codigo}</dt>
-              <dd>−{money(disc.couponDisc)}</dd>
+              <dd>−{fmt(disc.couponDisc)}</dd>
             </div>
           )}
           {recargo > 0 && (
             <div>
               <dt>Recargo {pay.nombre}</dt>
-              <dd>{money(recargo)}</dd>
+              <dd>{fmt(recargo)}</dd>
             </div>
           )}
           <div>
@@ -355,17 +361,24 @@ function Checkout() {
           <div className="grand">
             <dt>Total</dt>
             <dd>
-              {money(total)}
+              {fmt(total)}
               {hasConsult && <small> + a consultar</small>}
+              <small className="alt">{alt(total)}</small>
             </dd>
           </div>
           {hasEquipos && (
             <div>
               <dt>Para reservar</dt>
-              <dd>{money(reserva)}</dd>
+              <dd>
+                {fmt(reserva)}
+                <small className="alt">{alt(reserva)}</small>
+              </dd>
             </div>
           )}
         </dl>
+        <p className="fine">
+          Equivalencia calculada con el dólar de referencia de {money(dolar.value)}. Podés pagar en pesos o en USDT; en el mensaje van los dos montos.
+        </p>
         {hasEquipos && <p className="fine">Los equipos se reservan con 50% de seña y el resto se paga al retirar; los accesorios, completos al confirmar.</p>}
 
         <label className="check">
