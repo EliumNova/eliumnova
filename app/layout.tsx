@@ -9,8 +9,8 @@ const interTight = localFont({ src: "./fonts/inter-tight-latin-wght-normal.woff2
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: site.title,
-  description: site.description,
+  title: { default: "EliumNova · Servicio técnico y tienda de tecnología en La Matanza", template: "%s | EliumNova" },
+  description: "Reparamos y vendemos tecnología en Rafael Castillo, La Matanza: servicio técnico de celulares, tablets, PCs y consolas, y tienda de celulares, Apple y accesorios.",
   alternates: { canonical: "/" },
   robots: { index: true, follow: true, googleBot: { "max-image-preview": "large" } },
   openGraph: {
@@ -18,8 +18,8 @@ export const metadata: Metadata = {
     locale: "es_AR",
     siteName: site.name,
     url: "/",
-    title: "EliumNova · Servicio técnico en Rafael Castillo",
-    description: "Más que una reparación, una solución. Celulares, tablets, PCs y consolas. Pedí tu presupuesto por WhatsApp.",
+    title: "EliumNova · Más que una reparación, una solución",
+    description: "Servicio técnico y tienda de tecnología en Rafael Castillo, La Matanza. Pedí por WhatsApp.",
     images: [{ url: "/img/og.jpg", width: 1200, height: 630, alt: "EliumNova, servicio técnico en Rafael Castillo" }],
   },
   twitter: { card: "summary_large_image" },

@@ -1,16 +1,28 @@
 import Image from "next/image";
+import Link from "next/link";
 import { waLink } from "@/lib/site";
+import { WhatsAppIcon } from "./Icons";
 
-export default function Header() {
+type Section = "inicio" | "servicio" | "tienda" | "otra";
+
+export default function Header({ active = "otra" }: { active?: Section }) {
   return (
     <header className="nav">
       <div className="wrap">
-        <a className="logo" href="#inicio">
+        <Link className="logo" href="/">
           <Image src="/img/logo.png" alt="Logo de EliumNova" width={34} height={33} priority />
-          EliumNova
-        </a>
-        <a className="btn btn-main" href={waLink} target="_blank" rel="noopener">
-          WhatsApp
+          <span className="logo-text">EliumNova</span>
+        </Link>
+        <nav className="menu" aria-label="Secciones">
+          <Link href="/servicio-tecnico" aria-current={active === "servicio" ? "page" : undefined}>
+            Servicio técnico
+          </Link>
+          <Link href="/tienda" aria-current={active === "tienda" ? "page" : undefined}>
+            Tienda
+          </Link>
+        </nav>
+        <a className="btn btn-main nav-wa" href={waLink} target="_blank" rel="noopener" aria-label="WhatsApp">
+          <WhatsAppIcon /> <span>WhatsApp</span>
         </a>
       </div>
     </header>

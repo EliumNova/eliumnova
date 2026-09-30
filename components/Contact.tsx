@@ -1,7 +1,26 @@
 import { site, waLink } from "@/lib/site";
 import QuoteForm from "./QuoteForm";
+import Link from "next/link";
+import { WhatsAppIcon } from "./Icons";
 
-export default function Contact() {
+function VisitBox() {
+  return (
+    <div className="cta-box">
+      <h3>Pasá por el taller o escribinos</h3>
+      <p>Reparaciones, presupuestos y pedidos de la tienda: todo se coordina por WhatsApp y se retira en el mismo lugar.</p>
+      <div className="row">
+        <a className="btn btn-main" href={waLink} target="_blank" rel="noopener">
+          <WhatsAppIcon /> Escribinos
+        </a>
+        <Link className="btn btn-line" href="/tienda">
+          Ver la tienda
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default function Contact({ quote = true }: { quote?: boolean }) {
   return (
     <section id="contacto" style={{ paddingTop: 0 }}>
       <div className="wrap contact">
@@ -51,7 +70,7 @@ export default function Contact() {
             </div>
           </dl>
         </div>
-          <QuoteForm />
+          {quote ? <QuoteForm /> : <VisitBox />}
       </div>
     </section>
   );

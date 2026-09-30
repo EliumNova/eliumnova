@@ -39,3 +39,24 @@ npm run build    # genera el sitio final en la carpeta /out
 ## Después de publicar
 1. Google Search Console → agregar el sitio → enviar `sitemap.xml`.
 2. En tu Perfil de Empresa de Google, cargar el link en "Sitio web".
+
+## Tienda (/tienda)
+Los productos se leen de una **planilla de Google**. La web calcula el precio en pesos sola:
+- Toma el **dólar blue del día** (dolarapi.com). Si no responde, usa `dolarFallback` de `lib/shop.ts`.
+- Aplica la regla de margen: costo menor a 50 USD → ×2; desde 50 USD → ×1,5.
+- Redondea hacia arriba a un precio terminado en 900.
+- Si la fila tiene algo en `precio`, se usa ese precio fijo en pesos (sirve para accesorios ajustados al mercado).
+
+### Conectar la planilla
+1. En Google Sheets: Archivo → Importar → subí `docs/planilla-productos.csv`.
+2. Archivo → Compartir → **Publicar en la web** → elegí la hoja → formato **CSV** → Publicar. Copiá el link.
+3. Pegá ese link en `sheetCsvUrl` dentro de `lib/shop.ts` y publicá el sitio.
+
+Desde ahí, cambiar un costo o sacar un producto (`activo` = no) se ve en la tienda en unos minutos, sin tocar código.
+Mientras `sheetCsvUrl` esté vacío, la tienda usa `lib/products.ts`.
+
+### Columnas
+`id` (único, sin espacios) · `nombre` · `categoria` (celulares, accesorios, audio, mac) · `marca` · `estado` (Nuevo, Sellado, Reacondicionado) · `costo` · `moneda` (USD o ARS) · `precio` (opcional, fijo en pesos) · `consultar` (si) · `detalle` · `compat` · `plazo` · `garantia` · `nota` · `foto` (link a imagen) · `destacado` (si) · `activo` (si/no)
+
+### Pedidos
+El carrito arma el mensaje con un código (EN-DDMM-XXXX) y lo abre en WhatsApp. No hay cobro online: se confirma y cobra por WhatsApp.
