@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { money, needsSena, shop, type Product } from "@/lib/shop";
+import { needsSena, shop, type Product } from "@/lib/shop";
 import { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
+import MonedaToggle from "./MonedaToggle";
 import { gaItem, track } from "@/lib/track";
 
 export default function ProductDetail({ p, onClose }: { p: Product; onClose: () => void }) {
-  const { price, listPrice, onSale, campaign, add, setCartOpen } = useShop();
+  const { price, listPrice, onSale, campaign, add, setCartOpen, fmt, alt } = useShop();
   const closeRef = useRef<HTMLButtonElement>(null);
   const pr = price(p);
   const closeFn = useRef(onClose);
@@ -38,16 +39,18 @@ export default function ProductDetail({ p, onClose }: { p: Product; onClose: () 
           <h2 id="detail-title">{p.nombre}</h2>
           {p.detalle && <p className="muted">{p.detalle}</p>}
           <p className="price price-big">
-            {onSale(p) && listPrice(p) !== null && <s className="was">{money(listPrice(p)!)}</s>}
-            {pr === null ? "Consultar precio" : money(pr)}
+            {onSale(p) && listPrice(p) !== null && <s className="was">{fmt(listPrice(p)!)}</s>}
+            {pr === null ? "Consultar precio" : fmt(pr)}
+            {pr !== null && <small className="alt">{alt(pr)}</small>}
           </p>
+          <MonedaToggle compact />
           {onSale(p) && campaign && (
             <p className="sale-note">
               {campaign.nombre}: {campaign.pct}% off hasta el {campaign.hasta.slice(8)}/{Number(campaign.hasta.slice(5, 7))}.
             </p>
           )}
           {pr !== null && needsSena(p) && (
-            <p className="muted">Lo reservás con {money(pr * (shop.senaPct / 100))} de seña y pagás el resto al retirar.</p>
+            <p className="muted">Lo reservás con {fmt(pr * (shop.senaPct / 100))} ({alt(pr * (shop.senaPct / 100))}) de seña y pagás el resto al retirar.</p>
           )}
 
           <dl className="specs">

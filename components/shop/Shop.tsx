@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { categories, money, type Category, type Product } from "@/lib/shop";
 import ShopProvider, { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
+import MonedaToggle from "./MonedaToggle";
 import ProductDetail from "./ProductDetail";
 import CartDrawer from "./CartDrawer";
 import StoreInfo from "./StoreInfo";
@@ -23,7 +24,7 @@ const today = () =>
   new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 function Catalog() {
-  const { products, price, listPrice, onSale, campaign, dolar, add, count, setCartOpen, loading } = useShop();
+  const { products, price, listPrice, onSale, campaign, dolar, add, count, setCartOpen, loading, fmt, alt, moneda } = useShop();
   const [cat, setCat] = useState<Category | "todo">("todo");
   const [brand, setBrand] = useState("todas");
   const [q, setQ] = useState("");
@@ -145,6 +146,7 @@ function Catalog() {
                   <option value="mayor">Mayor precio</option>
                 </select>
               </label>
+              <MonedaToggle />
             </div>
           </div>
 
@@ -167,8 +169,9 @@ function Catalog() {
                       </h3>
                       {p.detalle && <p className="muted">{p.detalle}</p>}
                       <p className="price">
-                        {onSale(p) && listPrice(p) !== null && <s className="was">{money(listPrice(p)!)}</s>}
-                        {pr === null ? "Consultar precio" : money(pr)}
+                        {onSale(p) && listPrice(p) !== null && <s className="was">{fmt(listPrice(p)!)}</s>}
+                        {pr === null ? "Consultar precio" : fmt(pr)}
+                        {pr !== null && <small className="alt">{alt(pr)}</small>}
                       </p>
                       <button className="btn btn-main btn-sm" onClick={() => addToCart(p)}>
                         Agregar
@@ -185,7 +188,7 @@ function Catalog() {
           )}
 
           <p className="fine">
-            Precios en pesos{fecha ? `, vigentes al ${fecha}` : ""}, calculados con el dólar de referencia de {money(dolar.value)}. Pueden
+            Precios en {moneda === "USD" ? "dólares (equivalente al precio en pesos)" : "pesos"}{fecha ? `, vigentes al ${fecha}` : ""}, calculados con el dólar de referencia de {money(dolar.value)}. Pueden
             cambiar de un día para el otro; el precio final te lo confirmamos por WhatsApp antes de cobrar. Los equipos se reservan con 50% de
             seña.
           </p>
