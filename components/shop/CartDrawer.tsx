@@ -68,6 +68,7 @@ export default function CartDrawer() {
                   <div className="qty">
                     <button
                       type="button"
+                      disabled={l.qty <= 1}
                       onClick={() => {
                         setQty(l.p.id, l.qty - 1);
                         track("remove_from_cart", { currency: "ARS", value: l.unit ?? undefined, items: [gaItem(l.p, l.unit)] });
@@ -79,6 +80,20 @@ export default function CartDrawer() {
                     <span aria-live="polite">{l.qty}</span>
                     <button type="button" onClick={() => setQty(l.p.id, l.qty + 1)} aria-label={`Agregar uno de ${l.p.nombre}`}>
                       +
+                    </button>
+                    <button
+                      type="button"
+                      className="qty-del"
+                      onClick={() => {
+                        setQty(l.p.id, 0);
+                        track("remove_from_cart", { currency: "ARS", value: l.unit === null ? undefined : l.unit * l.qty, items: [gaItem(l.p, l.unit, l.qty)] });
+                      }}
+                      aria-label={`Eliminar ${l.p.nombre} del carrito`}
+                      title="Eliminar"
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                        <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </button>
                   </div>
                 </li>

@@ -24,7 +24,7 @@ export const presupuestos = [
 export type PresupuestoId = (typeof presupuestos)[number]["id"];
 
 export const plataformas = ["AMD (Ryzen)", "Intel (Core)", "Me da igual"] as const;
-export const graficas = ["NVIDIA (GeForce)", "AMD (Radeon)", "Sin placa de video", "Me da igual"] as const;
+export const graficas = ["NVIDIA (GeForce)", "AMD (Radeon)", "Intel (Arc)", "Sin placa de video", "Me da igual"] as const;
 export const resoluciones = ["1080p a 60 FPS", "1080p competitivo (144 FPS o más)", "1440p", "4K"] as const;
 export const gabinetes = ["Negro", "Blanco", "Me da igual"] as const;
 
