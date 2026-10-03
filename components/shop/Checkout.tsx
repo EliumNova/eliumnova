@@ -8,6 +8,7 @@ import { gaItem, track } from "@/lib/track";
 import { WhatsAppIcon } from "../Icons";
 import ShopProvider, { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
+import { fechaCorta } from "@/lib/dolar";
 import MonedaToggle from "./MonedaToggle";
 import { cartDiscounts, combo, findCoupon, type Coupon } from "@/lib/promos";
 import { hasBackend, publicApi } from "@/lib/backend";
@@ -140,7 +141,7 @@ function Checkout() {
       ...(email.trim() ? [`*Email:* ${email.trim()}`] : []),
       ...(nota.trim() ? [`*Nota:* ${nota.trim()}`] : []),
       "",
-      `Precios vistos en la web el ${fecha}, dólar de referencia ${money(dolar.value)}.`,
+      `Precios vistos en la web el ${fecha}${dolar.value > 0 ? `, dólar blue de cierre${dolar.fecha ? ` del ${fechaCorta(dolar.fecha)}` : ""}: ${money(dolar.value)}` : ""}.`,
     ].join("\n");
     window.open(`https://wa.me/${site.whatsapp.number}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
     setDone({ code, msg });
@@ -418,7 +419,7 @@ function Checkout() {
           )}
         </dl>
         <p className="fine">
-          Equivalencia calculada con el dólar de referencia de {money(dolar.value)}. Podés pagar en pesos o en USDT; en el mensaje van los dos montos.
+          Equivalencia calculada con el dólar blue de cierre{dolar.fecha ? ` del ${fechaCorta(dolar.fecha)}` : ""} ({money(dolar.value)}). Podés pagar en pesos o en USDT; en el mensaje van los dos montos.
         </p>
         {hasEquipos && <p className="fine">Los equipos se reservan con 50% de seña y el resto se paga al retirar; los accesorios, completos al confirmar.</p>}
 

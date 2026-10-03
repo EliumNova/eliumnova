@@ -1,7 +1,8 @@
 import type { Schema } from "../resource";
 import { dataClient, listAll } from "../client";
 import { seedIfNeeded } from "../seed";
-import { priceOf, shop, type Product } from "../../../lib/shop";
+import { priceOf, type Product } from "../../../lib/shop";
+import { dolarVigente } from "../dolar-store";
 
 // Catálogo público: precios finales en pesos calculados en el servidor.
 // El navegador del cliente nunca recibe costos, monedas de compra ni márgenes.
@@ -9,14 +10,6 @@ import { priceOf, shop, type Product } from "../../../lib/shop";
 type Row = Schema["Product"]["type"];
 let cache: { at: number; value: Schema["CatalogResult"]["type"] } | null = null;
 
-async function dolarBlue(): Promise<{ value: number; live: boolean }> {
-  try {
-    const r = await fetch(shop.dolarApiUrl, { signal: AbortSignal.timeout(4000) });
-    const d = (await r.json()) as { venta?: number };
-    if (d?.venta && d.venta > 0) return { value: d.venta, live: true };
-  } catch {}
-  return { value: shop.dolarFallback, live: false };
-}
 
 export const toProduct = (r: Row): Product => ({
   id: r.slug,
@@ -41,16 +34,18 @@ export const handler: Schema["getCatalog"]["functionHandler"] = async () => {
   if (cache && Date.now() - cache.at < 60_000) return cache.value;
   const client = await dataClient();
   await seedIfNeeded().catch((e) => console.error("seed", e));
-  const [rows, dolar] = await Promise.all([
+  const [rows, cierre] = await Promise.all([
     listAll<Row>((nextToken) => client.models.Product.list({ limit: 500, nextToken })),
-    dolarBlue(),
+    dolarVigente().catch(() => null),
   ]);
+  // Sin dólar de cierre no se calcula ningún precio en dólares (quedan en "Consultar").
+  const dolar = cierre?.venta ?? 0;
   const productos = rows
     .filter((r) => r.activo !== false)
     .sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999))
     .map((r) => {
       const p = toProduct(r);
-      const precio = priceOf(p, dolar.value);
+      const precio = priceOf(p, dolar);
       // Solo campos públicos.
       return {
         id: p.id,
@@ -69,7 +64,7 @@ export const handler: Schema["getCatalog"]["functionHandler"] = async () => {
         precio: precio ?? undefined,
       };
     });
-  const value = { productos, dolar: dolar.value, dolarEnVivo: dolar.live, actualizado: new Date().toISOString() };
+  const value = { productos, dolar, dolarEnVivo: !!cierre?.alDia, dolarFecha: cierre?.fecha, actualizado: new Date().toISOString() };
   cache = { at: Date.now(), value };
   return value;
 };

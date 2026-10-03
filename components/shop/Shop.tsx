@@ -5,6 +5,7 @@ import Link from "next/link";
 import { categories, money, type Category, type Product } from "@/lib/shop";
 import ShopProvider, { useShop } from "./ShopProvider";
 import ProductArt from "./ProductArt";
+import { fechaCorta } from "@/lib/dolar";
 import MonedaToggle from "./MonedaToggle";
 import CategoryIcon from "./CategoryIcon";
 import ProductDetail from "./ProductDetail";
@@ -274,7 +275,7 @@ function Catalog() {
           )}
 
           <p className="fine">
-            Precios en {moneda === "USD" ? "dólares (equivalente al precio en pesos)" : "pesos"}{fecha ? `, vigentes al ${fecha}` : ""}, calculados con el dólar de referencia de {money(dolar.value)}. Pueden
+            Precios en {moneda === "USD" ? "dólares (equivalente al precio en pesos)" : "pesos"}{fecha ? `, vigentes al ${fecha}` : ""}{dolar.value > 0 ? <>, calculados con el dólar blue de cierre{dolar.fecha ? ` del ${fechaCorta(dolar.fecha)}` : ""} ({money(dolar.value)})</> : ". Los precios en dólares se están actualizando"}. Pueden
             cambiar de un día para el otro; el precio final te lo confirmamos por WhatsApp antes de cobrar. Los equipos se reservan con 50% de
             seña.
           </p>

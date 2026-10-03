@@ -4,10 +4,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { inMoneda, priceOf, shop, type Moneda, type Product } from "@/lib/shop";
 import { parseCsv, rowsToProducts } from "@/lib/sheet";
 import { hasBackend, parseJson, publicApi } from "@/lib/backend";
+import { buscarCierre, cierreVigente } from "@/lib/dolar";
 import { activeCampaign, campaignApplies, discounted, upcomingCampaign, type Campaign } from "@/lib/promos";
 
 type CartLine = { id: string; qty: number };
-type Dolar = { value: number; live: boolean; updated?: string };
+type Dolar = { value: number; live: boolean; fecha?: string; updated?: string }; // value 0 = sin cierre disponible
 
 type Ctx = {
   moneda: Moneda;
@@ -50,7 +51,7 @@ export function useShop() {
 export default function ShopProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [source, setSource] = useState<Ctx["source"]>("cargando");
-  const [dolar, setDolar] = useState<Dolar>({ value: shop.dolarFallback, live: false });
+  const [dolar, setDolar] = useState<Dolar>({ value: 0, live: false });
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -64,6 +65,12 @@ export default function ShopProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch {}
   }, [cart]);
+
+  // Dólar blue de cierre buscado desde el navegador (respaldo). Si falla, queda en 0 y los precios en dólares pasan a "Consultar".
+  const cierreCliente = () =>
+    buscarCierre(cierreVigente())
+      .then((c) => setDolar({ value: c.venta, live: true, fecha: c.fecha }))
+      .catch(() => {});
 
   // Catálogo: del servidor si hay backend; si no, catálogo local + planilla.
   useEffect(() => {
@@ -83,25 +90,19 @@ export default function ShopProvider({ children }: { children: ReactNode }) {
         if (!alive || !data) throw new Error("sin datos");
         const list = parseJson<PublicProduct[]>(data.productos).map(fromPublic);
         setProducts(list);
-        setDolar({ value: data.dolar, live: !!data.dolarEnVivo, updated: data.actualizado ?? undefined });
+        setDolar({ value: data.dolar, live: !!data.dolarEnVivo, fecha: data.dolarFecha ?? undefined, updated: data.actualizado ?? undefined });
         setSource("servidor");
       })
-      .catch(() => loadLocal());
+      .catch(() => {
+        loadLocal();
+        cierreCliente();
+      });
     return () => { alive = false; };
   }, []);
 
-  // Dólar blue del día (solo sin servidor; con servidor lo calcula el backend).
+  // Sin servidor: el cierre se busca desde el navegador (con servidor lo resuelve el backend).
   useEffect(() => {
-    if (hasBackend) return;
-    let alive = true;
-    fetch(shop.dolarApiUrl, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => {
-        const v = Number(d?.venta);
-        if (alive && v > 0) setDolar({ value: v, live: true, updated: d?.fechaActualizacion });
-      })
-      .catch(() => {});
-    return () => { alive = false; };
+    if (!hasBackend) cierreCliente();
   }, []);
 
   // Planilla de Google, si está configurada (solo sin servidor).
@@ -160,7 +161,7 @@ export default function ShopProvider({ children }: { children: ReactNode }) {
   /** Precio en pesos → texto en la moneda elegida. */
   const fmt = useCallback((ars: number) => inMoneda(ars, moneda, dolar.value), [moneda, dolar.value]);
   /** Precio en pesos → texto en la otra moneda. */
-  const alt = useCallback((ars: number) => inMoneda(ars, moneda === "USD" ? "ARS" : "USD", dolar.value), [moneda, dolar.value]);
+  const alt = useCallback((ars: number) => (dolar.value > 0 ? inMoneda(ars, moneda === "USD" ? "ARS" : "USD", dolar.value) : ""), [moneda, dolar.value]);
 
   const loading = source === "cargando";
   const value = { moneda, setMoneda, fmt, alt, products, source, loading, dolar, price, listPrice, onSale, campaign, upcoming, now, cart: validCart, add, setQty, clear, count, cartOpen, setCartOpen };

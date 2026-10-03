@@ -1,6 +1,7 @@
 import type { Schema } from "../resource";
 import { dataClient, listAll } from "../client";
 import { seedIfNeeded } from "../seed";
+import { dolarVigente } from "../dolar-store";
 import { parseCsv, parseNumber } from "../../../lib/sheet";
 
 // Lee las planillas de proveedores (publicadas como CSV) y actualiza el costo
@@ -15,6 +16,8 @@ const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 async function run(): Promise<string> {
   const client = await dataClient();
   await seedIfNeeded().catch((e) => console.error("seed", e));
+  // Cada hora: si ya pasó el cierre del día, deja guardado el dólar nuevo.
+  await dolarVigente().catch((e) => console.error("dólar", e));
   const [sources, products] = await Promise.all([
     listAll<Source>((nextToken) => client.models.SupplierSource.list({ limit: 100, nextToken })),
     listAll<Product>((nextToken) => client.models.Product.list({ limit: 500, nextToken })),

@@ -8,6 +8,7 @@ import { track } from "@/lib/track";
 import { WhatsAppIcon } from "../Icons";
 import ShopProvider, { useShop } from "./ShopProvider";
 import CategoryIcon from "./CategoryIcon";
+import { fechaCorta } from "@/lib/dolar";
 import MonedaToggle from "./MonedaToggle";
 import {
   extras,
@@ -61,9 +62,11 @@ function Builder() {
   const pesos = (usd: number) => money(Math.round((usd * dolar.value) / 10_000) * 10_000);
   const rangoPesos = (p: (typeof presupuestos)[number]) =>
     p.hasta === 0 ? `Más de ${pesos(p.desde)}` : p.desde === 0 ? `Hasta ${pesos(p.hasta)}` : `${pesos(p.desde)} a ${pesos(p.hasta)}`;
+  // Sin dólar de cierre disponible, los rangos se muestran solo en dólares.
+  const hayDolar = dolar.value > 0;
   const presuTexto = (p: (typeof presupuestos)[number]) =>
-    p.id === "p0" ? "Te recomendamos según el uso" : moneda === "USD" ? p.label : rangoPesos(p);
-  const presuAlt = (p: (typeof presupuestos)[number]) => (p.id === "p0" ? "" : moneda === "USD" ? rangoPesos(p) : p.label);
+    p.id === "p0" ? "Te recomendamos según el uso" : moneda === "USD" || !hayDolar ? p.label : rangoPesos(p);
+  const presuAlt = (p: (typeof presupuestos)[number]) => (p.id === "p0" || !hayDolar ? "" : moneda === "USD" ? rangoPesos(p) : p.label);
   const conf = uso && presu ? sugerencia(uso, presu) : null;
   const toggle = (x: string) => setSumar((s) => (s.includes(x) ? s.filter((y) => y !== x) : [...s, x]));
 
@@ -72,7 +75,7 @@ function Builder() {
     if (!uso || !presu || !presuObj) return;
     const code = pcCode();
     const usoObj = usos.find((u) => u.id === uso)!;
-    const presuMsg = presu === "p0" ? "que me recomienden" : `${presuObj.label} (${rangoPesos(presuObj)})`;
+    const presuMsg = presu === "p0" ? "que me recomienden" : hayDolar ? `${presuObj.label} (${rangoPesos(presuObj)})` : presuObj.label;
     const msg = [
       `Hola EliumNova! Quiero armar una PC (${code}):`,
       "",
@@ -93,7 +96,7 @@ function Builder() {
       `*Localidad:* ${localidad.trim()}`,
       ...(nota.trim() ? [`*Nota:* ${nota.trim()}`] : []),
       "",
-      `Dólar de referencia en la web: ${money(dolar.value)}.`,
+      ...(dolar.value > 0 ? [`Dólar blue de cierre${dolar.fecha ? ` del ${fechaCorta(dolar.fecha)}` : ""}: ${money(dolar.value)}.`] : []),
     ].join("\n");
     window.open(`https://wa.me/${site.whatsapp.number}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
     track("generate_lead", { lead_type: "arma_tu_pc", uso, presupuesto: presu });

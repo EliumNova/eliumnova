@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { categories, money, priceOf, shop, type Product } from "@/lib/shop";
 import { parseCsv, parseNumber } from "@/lib/sheet";
 import { userApi } from "@/lib/backend";
+import { fechaCorta } from "@/lib/dolar";
 import { api, fmtDate, type ProductRow } from "./data";
 
 type Draft = {
@@ -42,7 +43,8 @@ const asProduct = (r: ProductRow): Product => ({
 
 export default function Products() {
   const [rows, setRows] = useState<ProductRow[] | null>(null);
-  const [dolar, setDolar] = useState(shop.dolarFallback);
+  const [dolar, setDolar] = useState(0);
+  const [dolarFecha, setDolarFecha] = useState("");
   const [edit, setEdit] = useState<Draft | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [q, setQ] = useState("");
@@ -52,7 +54,14 @@ export default function Products() {
   const load = () => api.products().then((r) => setRows(r.sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999) || a.nombre.localeCompare(b.nombre)))).catch((e) => setMsg(String(e?.message ?? e)));
   useEffect(() => {
     load();
-    fetch(shop.dolarApiUrl).then((r) => r.json()).then((d) => d?.venta > 0 && setDolar(d.venta)).catch(() => {});
+    // El mismo dólar de cierre que ven los clientes.
+    userApi()
+      .queries.getCatalog()
+      .then(({ data }) => {
+        if (data?.dolar) setDolar(data.dolar);
+        if (data?.dolarFecha) setDolarFecha(data.dolarFecha);
+      })
+      .catch(() => {});
   }, []);
 
   const list = useMemo(() => (rows ?? []).filter((r) => !q || `${r.nombre} ${r.marca} ${r.proveedor}`.toLowerCase().includes(q.toLowerCase())), [rows, q]);
@@ -126,7 +135,12 @@ export default function Products() {
           <input type="file" accept=".csv,text/csv" disabled={busy} onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
         </label>
       </div>
-      <p className="fine">Precio de venta calculado con el dólar blue de hoy ({money(dolar)}) y la regla de margen. El cliente nunca ve el costo.</p>
+      <p className="fine">
+        {dolar > 0
+          ? `Precio de venta calculado con el dólar blue de cierre${dolarFecha ? ` del ${fechaCorta(dolarFecha)}` : ""} (${money(dolar)}) y la regla de margen.`
+          : "Sin dólar de cierre disponible: los productos en dólares se muestran como “Consultar”."}{" "}
+        El cliente nunca ve el costo.
+      </p>
       {msg && <p className="admin-msg">{msg}</p>}
 
       <div className="table-wrap">

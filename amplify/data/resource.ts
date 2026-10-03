@@ -116,8 +116,9 @@ const schema = a
 
     CatalogResult: a.customType({
       productos: a.json().required(), // lista pública, con precio final en pesos
-      dolar: a.float().required(),
-      dolarEnVivo: a.boolean(),
+      dolar: a.float().required(), // dólar blue de cierre (venta); 0 = no disponible
+      dolarEnVivo: a.boolean(), // true = cierre al día; false = último cierre conocido
+      dolarFecha: a.string(), // fecha del cierre (AAAA-MM-DD)
       actualizado: a.string(),
     }),
 

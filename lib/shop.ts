@@ -10,10 +10,8 @@ export const shop = {
   // ver docs/apps-script-pedidos.gs). Vacío = no se registran.
   ordersWebhookUrl: "",
 
-  // Cotización en vivo del dólar blue (se usa el valor de venta).
-  dolarApiUrl: "https://dolarapi.com/v1/dolares/blue",
-  // Si la API no responde, se usa este valor.
-  dolarFallback: 1560,
+  // Dólar: se usa el blue de CIERRE (venta), fijo para todo el día. Ver lib/dolar.ts.
+  // No hay valor de respaldo fijo: si no se puede obtener el cierre, los precios quedan en "Consultar".
 
   // Regla de margen: costo menor a 50 USD → ×2; desde 50 USD → ×1,5.
   margin: { thresholdUsd: 50, cheap: 2, expensive: 1.5 },
@@ -86,6 +84,8 @@ export function roundPrice(value: number) {
 export function priceOf(p: Product, dolar: number): number | null {
   if (p.consultar) return null;
   if (p.precio && p.precio > 0) return p.precio;
+  // Sin dólar de cierre válido no se calcula: mejor "Consultar" que un precio equivocado.
+  if (!(dolar > 0)) return null;
   const costUsd = p.moneda === "USD" ? p.costo : p.costo / dolar;
   const mult = costUsd < shop.margin.thresholdUsd ? shop.margin.cheap : shop.margin.expensive;
   const costArs = p.moneda === "USD" ? p.costo * dolar : p.costo;
@@ -101,8 +101,8 @@ export type Moneda = "ARS" | "USD";
 export const toUsd = (ars: number, dolar: number) => Math.ceil(ars / dolar);
 export const usd = (n: number) => "US$ " + Math.round(n).toLocaleString("es-AR", { maximumFractionDigits: 0 });
 /** Formatea un precio en pesos en la moneda elegida. */
-export const inMoneda = (ars: number, moneda: Moneda, dolar: number) => (moneda === "USD" ? usd(toUsd(ars, dolar)) : money(ars));
+export const inMoneda = (ars: number, moneda: Moneda, dolar: number) => (moneda === "USD" && dolar > 0 ? usd(toUsd(ars, dolar)) : money(ars));
 /** "$729.900 / US$ 468" */
-export const both = (ars: number, dolar: number) => `${money(ars)} / ${usd(toUsd(ars, dolar))}`;
+export const both = (ars: number, dolar: number) => (dolar > 0 ? `${money(ars)} / ${usd(toUsd(ars, dolar))}` : money(ars));
 
 export const needsSena = (p: Product) => shop.senaCategories.includes(p.categoria);
