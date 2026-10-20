@@ -37,10 +37,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-AR" className={`${syne.variable} ${interTight.variable}`}>
-      <body>
-        {children}
+      <head>
         <Analytics />
-      </body>
+      </head>
+      <body>{children}</body>
     </html>
   );
 }
